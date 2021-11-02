@@ -1,4 +1,4 @@
-import dictionary from '$lib/core/dictionary';
+import dictionary from './dictionary';
 import type { Readable, Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -19,8 +19,7 @@ class TypingGame {
 			generateSpecialCharacters: true,
 		},
 	) {
-		// Use supplied text or generate one
-		this.text = options.text ?? this.generateText();
+		this.text = options.text ?? this.generateText(); // Use supplied text or generate one
 
 		// Make character array
 		let characters: TypingGame.Character[] = [];
@@ -31,10 +30,11 @@ class TypingGame {
 			});
 		}
 
-		// Init character store
-		this.characters = writable(characters);
-
-		this.gameState = writable(TypingGame.GameState.NotStarted);
+		this.characters = writable(characters); // Init character store
+		this.gameState = writable(TypingGame.GameState.NotStarted); // Init gameState store
+		this.cps = writable(0); // Init cps store
+		this.wpm = writable(0); // Init wpm store
+		this.accuracy = writable(100); // Init accuracy store
 	}
 
 	/**
@@ -43,6 +43,7 @@ class TypingGame {
 	public getStores(): TypingGame.Stores {
 		// Note: Writable stores are objects with only a subscribe method
 		return {
+			characters: { subscribe: this.characters.subscribe },
 			cps: { subscribe: this.cps.subscribe },
 			wpm: { subscribe: this.wpm.subscribe },
 			accuracy: { subscribe: this.accuracy.subscribe },
@@ -140,6 +141,7 @@ namespace TypingGame {
 	}
 
 	export interface Stores {
+		readonly characters: Readable<Character[]>
 		readonly cps: Readable<number>;
 		readonly wpm: Readable<number>;
 		readonly accuracy: Readable<number>;
