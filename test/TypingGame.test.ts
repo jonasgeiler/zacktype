@@ -1,6 +1,18 @@
 import TypingGame from '$lib/core/TypingGame';
 import type { Readable } from 'svelte/store';
 
+describe('providing text', () => {
+
+	test('it uses the provided text', () => {
+		const tg = new TypingGame({
+			text: 'Hello World!'
+		});
+
+		expect(tg.text).toEqual('Hello World!');
+	});
+
+});
+
 describe('generating text', () => {
 
 	test('it generates random text when no text was provided', () => {
