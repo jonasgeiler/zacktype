@@ -17,8 +17,14 @@ class TypingGame {
 	/** User's words/minute score */
 	protected wpm: WritableAtom<number>;
 
-	/** User's typing accuracy */
-	protected accuracy: WritableAtom<number>;
+	/** User's accuracy */
+	protected accuracy: ReadableAtom<number>;
+
+	/** Amount of user's typing mistakes */
+	protected mistakes: WritableAtom<number>;
+
+	/** Total amount of characters typed in by user */
+	protected typedCharacters: WritableAtom<number>;
 
 	/** Current state of the game */
 	protected gameState: WritableAtom<TypingGame.GameState>;
@@ -56,7 +62,8 @@ class TypingGame {
 		this.gameState = atom(TypingGame.GameState.NotStarted);
 		this.cps = atom(0);
 		this.wpm = atom(0);
-		this.accuracy = atom(100);
+		this.mistakes = atom(0);
+		this.typedCharacters = atom(0);
 		this.startTime = atom(null);
 		this.endTime = atom(null);
 		this.cursorPosition = atom(0);
@@ -65,6 +72,12 @@ class TypingGame {
 		this.cursorCharacter = computed(
 			[ this.text, this.cursorPosition ],
 			($text, $cursorPosition) => $text[$cursorPosition],
+		);
+
+		// Init accuracy store
+		this.accuracy = computed(
+			[ this.mistakes, this.typedCharacters ],
+			($mistakes, $typedCharacters) => Math.round((($typedCharacters - $mistakes) / $typedCharacters) * 100),
 		);
 	}
 
@@ -77,17 +90,35 @@ class TypingGame {
 		const { set: b, ...characterStates } = this.characterStates;
 		const { set: c, ...cps } = this.cps;
 		const { set: d, ...wpm } = this.wpm;
-		const { set: e, ...accuracy } = this.accuracy;
-		const { set: f, ...gameState } = this.gameState;
-		const { set: g, ...startTime } = this.startTime;
-		const { set: h, ...endTime } = this.endTime;
-		const { set: i, ...cursorPosition } = this.cursorPosition;
+		const { set: e, ...mistakes } = this.mistakes;
+		const { set: f, ...typedCharacters } = this.typedCharacters;
+		const { set: g, ...gameState } = this.gameState;
+		const { set: h, ...startTime } = this.startTime;
+		const { set: i, ...endTime } = this.endTime;
+		const { set: j, ...cursorPosition } = this.cursorPosition;
 
 		// Return the readable stores
 		return {
-			text, characterStates, cps, wpm, accuracy, gameState, startTime, endTime, cursorPosition,
-			cursorCharacter: this.cursorCharacter
+			text, characterStates, cps, wpm, mistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
+			accuracy:        this.accuracy,
+			cursorCharacter: this.cursorCharacter,
 		};
+	}
+
+	/**
+	 * Starts the game.
+	 */
+	protected startGame() {
+		this.startTime.set(Date.now()); // Store the time when user started typing
+		this.gameState.set(TypingGame.GameState.Started); // Change game state to "started"
+	}
+
+	/**
+	 * Ends the game.
+	 */
+	protected gameOver() {
+		this.endTime.set(Date.now());
+		this.gameState.set(TypingGame.GameState.Ended);
 	}
 
 	/**
@@ -109,14 +140,6 @@ class TypingGame {
 		}
 	}
 
-	/**
-	 * Starts the game.
-	 */
-	protected startGame() {
-		this.startTime.set(Date.now()); // Store the time when user started typing
-		this.gameState.set(TypingGame.GameState.Started); // Change game state to "started"
-	}
-
 	protected removeCharacter() {
 		const currPos = this.cursorPosition.get();
 		if (currPos == 0) return;
@@ -132,9 +155,18 @@ class TypingGame {
 			this.setCurrentCharacterState(TypingGame.CharacterState.Correct);
 		} else {
 			this.setCurrentCharacterState(TypingGame.CharacterState.Incorrect);
+
+			this.mistakes.set(this.mistakes.get() + 1); // Increase amount of mistakes (for accuracy)
 		}
 
-		this.cursorPosition.set(this.cursorPosition.get() + 1);
+		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of typed characters (for accuracy)
+
+		const newCursorPosition = this.cursorPosition.get() + 1;
+		this.cursorPosition.set(newCursorPosition);
+
+		if (newCursorPosition == this.text.get().length) {
+			this.gameOver();
+		}
 	}
 
 	protected setCurrentCharacterState(state: TypingGame.CharacterState) {
@@ -229,11 +261,13 @@ namespace TypingGame {
 	}
 
 	export interface Stores {
-		readonly text: ReadableAtom<string>
+		readonly text: ReadableAtom<string>;
 		readonly characterStates: ReadableAtom<CharacterState[]>;
 		readonly cps: ReadableAtom<number>;
 		readonly wpm: ReadableAtom<number>;
 		readonly accuracy: ReadableAtom<number>;
+		readonly mistakes: ReadableAtom<number>;
+		readonly typedCharacters: ReadableAtom<number>;
 		readonly gameState: ReadableAtom<GameState>;
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;

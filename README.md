@@ -12,13 +12,13 @@
   - [ ] Calculate and display CPS
   - [ ] Implemented a "game over" state
   - [ ] Be able to reset the game and play again
-  - [ ] Count errors
+  - [X] Count errors
   - [X] Handle user input
   - [X] Handle backspace
 - [ ] Design a minimalistic front end
   - [X] Mockup
   - [ ] Website
-- [ ] Calculate and display accuracy
+- [X] Calculate and display accuracy
 - [ ] Calculate and display WPM
 - [ ] More unit tests
 - [ ] Maybe make a light and dark theme?
