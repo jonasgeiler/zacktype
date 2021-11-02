@@ -1,6 +1,6 @@
 import type { ReadableAtom, WritableAtom } from 'nanostores';
 import { atom } from 'nanostores';
-import type { Key } from 'ts-key-enum';
+import { Key } from 'ts-key-enum';
 import dictionary from './dictionary';
 
 class TypingGame {
@@ -57,32 +57,47 @@ class TypingGame {
 		const { set: e, ...gameState } = this.gameState;
 		const { set: f, ...startTime } = this.startTime;
 		const { set: g, ...endTime } = this.endTime;
+		const { set: h, ...cursorPosition } = this.cursorPosition;
 
 		// Return the readable stores
 		return {
-			characters, cps, wpm, accuracy, gameState, startTime, endTime,
+			characters, cps, wpm, accuracy, gameState, startTime, endTime, cursorPosition
 		};
 	}
 
 	/**
-	 * Starts the game
+	 * Starts the game.
 	 */
 	public startGame() {
 		this.startTime.set(Date.now()); // Store the time when user started typing
 		this.gameState.set(TypingGame.GameState.Started); // Change game state to "started"
 	}
 
+	/**
+	 * Handle key presses by the user.
+	 * @param key - The key property from an `KeyboardEvent`
+	 */
 	public handleKey(key: Key) {
-		switch (this.gameState.get()) {
-			case TypingGame.GameState.NotStarted:
-				this.startGame(); // Start the game if not yet started
+		if (this.gameState.get() == TypingGame.GameState.Ended) return; // Don't handle keys when game already ended
+
+		// I use switch because I might add ArrowLeft and similar later on
+		switch (key) {
+			case Key.Backspace:
+				this.removeCharacter();
 				break;
 
-			case TypingGame.GameState.Ended:
-				return;
+			default:
+				if (key.length != 1) return; // Ignore any key presses that use a key identifier longer than 1 character (so only allow "A" or "1")
+				this.insertCharacter(key);
 		}
+	}
 
-		console.log('KEY PRESS', key);
+	protected removeCharacter() {
+
+	}
+
+	protected insertCharacter(character: string) {
+
 	}
 
 	/**
@@ -182,6 +197,7 @@ namespace TypingGame {
 		readonly gameState: ReadableAtom<GameState>;
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;
+		readonly cursorPosition: ReadableAtom<number>;
 	}
 
 	export interface Options {
