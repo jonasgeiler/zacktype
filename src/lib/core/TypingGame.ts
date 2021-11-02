@@ -102,12 +102,6 @@ class TypingGame {
 			$mistakePositions => $mistakePositions.length,
 		);
 
-		// Init accuracy store
-		this.accuracy = computed(
-			[ this.mistakes, this.typedCharacters ],
-			($mistakes, $typedCharacters) => Math.round((($typedCharacters - $mistakes) / $typedCharacters) * 100),
-		);
-
 		// Init uncorrectedMistakes store
 		this.uncorrectedMistakes = computed(
 			[ this.mistakes, this.correctedMistakes ],
@@ -138,6 +132,16 @@ class TypingGame {
 				const errorRate = $uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
 
 				return Math.round(grossWPM - errorRate); // Calculate net WPM
+			},
+		);
+
+		// Init accuracy store
+		this.accuracy = computed(
+			[ this.mistakes, this.typedCharacters ],
+			($mistakes, $typedCharacters) => {
+				const charactersTypedWithoutMistakes = ($typedCharacters - $mistakes);
+
+				return Math.round((charactersTypedWithoutMistakes / $typedCharacters) * 100);
 			},
 		);
 	}
