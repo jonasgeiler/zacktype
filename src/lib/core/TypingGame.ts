@@ -12,16 +12,25 @@ class TypingGame {
 	protected characterStates: WritableAtom<TypingGame.CharacterState[]>;
 
 	/** User's characters/second score */
-	protected cps: WritableAtom<number>;
+	protected cps: ReadableAtom<number>;
 
 	/** User's words/minute score */
-	protected wpm: WritableAtom<number>;
+	protected wpm: ReadableAtom<number>;
 
-	/** User's accuracy */
+	/** Accuracy of the user's typing */
 	protected accuracy: ReadableAtom<number>;
 
-	/** Amount of user's typing mistakes */
-	protected mistakes: WritableAtom<number>;
+	/** Amount of mistakes that the user made while typing */
+	protected mistakes: ReadableAtom<number>;
+
+	/** Positions of mistakes that user made while typing */
+	protected mistakePositions: WritableAtom<number[]>;
+
+	/** Amount of mistakes that the user made, but then corrected */
+	protected correctedMistakes: WritableAtom<number>;
+
+	/** Amount of mistakes that the user made and didn't correct */
+	protected uncorrectedMistakes: ReadableAtom<number>;
 
 	/** Total amount of characters typed in by user */
 	protected typedCharacters: WritableAtom<number>;
@@ -34,6 +43,9 @@ class TypingGame {
 
 	/** Time the user finished typing */
 	protected endTime: WritableAtom<number | null>;
+
+	/** Total time the user took to finish typing */
+	protected elapsedTime: ReadableAtom<number | null>;
 
 	/** Position of the cursor in the text */
 	protected cursorPosition: WritableAtom<number>;
@@ -60,9 +72,8 @@ class TypingGame {
 		// Init other stores
 		this.characterStates = atom(characterStates);
 		this.gameState = atom(TypingGame.GameState.NotStarted);
-		this.cps = atom(0);
-		this.wpm = atom(0);
-		this.mistakes = atom(0);
+		this.mistakePositions = atom([]);
+		this.correctedMistakes = atom(0);
 		this.typedCharacters = atom(0);
 		this.startTime = atom(null);
 		this.endTime = atom(null);
@@ -74,10 +85,60 @@ class TypingGame {
 			($text, $cursorPosition) => $text[$cursorPosition],
 		);
 
+		// Init cpm store
+		this.cps = computed(
+			[ this.typedCharacters, this.startTime, this.endTime ],
+			($typedCharacters, $startTime, $endTime) => {
+				if (!$startTime || !$endTime) return 0;
+
+				const elapsedSeconds = ($endTime - $startTime) / 1000;
+				return Math.round(($typedCharacters / elapsedSeconds) * 60);
+			},
+		);
+
+		// Init mistakes store
+		this.mistakes = computed(
+			this.mistakePositions,
+			$mistakePositions => $mistakePositions.length,
+		);
+
 		// Init accuracy store
 		this.accuracy = computed(
 			[ this.mistakes, this.typedCharacters ],
 			($mistakes, $typedCharacters) => Math.round((($typedCharacters - $mistakes) / $typedCharacters) * 100),
+		);
+
+		// Init uncorrectedMistakes store
+		this.uncorrectedMistakes = computed(
+			[ this.mistakes, this.correctedMistakes ],
+			($mistakes, $correctedMistakes) => $mistakes - $correctedMistakes,
+		);
+
+		// Init elapsedTime store
+		this.elapsedTime = computed(
+			[ this.startTime, this.endTime ],
+			($startTime, $endTime) => {
+				if ($startTime == null || $endTime == null) return null;
+				return $endTime - $startTime;
+			},
+		);
+
+		// Init wpm store
+		this.wpm = computed(
+			[ this.typedCharacters, this.elapsedTime, this.uncorrectedMistakes ],
+			($typedCharacters, $elapsedTime, $uncorrectedMistakes) => {
+				if ($elapsedTime == null) return 0;
+
+				// https://www.speedtypingonline.com/typing-equations
+
+				const typedWords = $typedCharacters / 5; // We use 5 here, because that's the average word length in the English language and therefore commonly used to calculate WPM
+				const elapsedSeconds = $elapsedTime / 1000; // Convert milliseconds to seconds
+				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
+				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
+				const errorRate = $uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
+
+				return Math.round(grossWPM - errorRate); // Calculate net WPM
+			},
 		);
 	}
 
@@ -88,9 +149,8 @@ class TypingGame {
 		// Omit the set function for each store:
 		const { set: a, ...text } = this.text;
 		const { set: b, ...characterStates } = this.characterStates;
-		const { set: c, ...cps } = this.cps;
-		const { set: d, ...wpm } = this.wpm;
-		const { set: e, ...mistakes } = this.mistakes;
+		const { set: c, ...mistakePositions } = this.mistakePositions;
+		const { set: d, ...correctedMistakes } = this.correctedMistakes;
 		const { set: f, ...typedCharacters } = this.typedCharacters;
 		const { set: g, ...gameState } = this.gameState;
 		const { set: h, ...startTime } = this.startTime;
@@ -99,9 +159,14 @@ class TypingGame {
 
 		// Return the readable stores
 		return {
-			text, characterStates, cps, wpm, mistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
-			accuracy:        this.accuracy,
-			cursorCharacter: this.cursorCharacter,
+			text, characterStates, mistakePositions, correctedMistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
+			wpm:                 this.wpm,
+			cps:                 this.cps,
+			accuracy:            this.accuracy,
+			mistakes:            this.mistakes,
+			uncorrectedMistakes: this.uncorrectedMistakes,
+			elapsedTime:         this.elapsedTime,
+			cursorCharacter:     this.cursorCharacter,
 		};
 	}
 
@@ -123,24 +188,24 @@ class TypingGame {
 
 	/**
 	 * Handle key presses by the user.
-	 * @param key - The key property from an `KeyboardEvent`
+	 * @param key - The key property from an `KeyboardEvent`.
 	 */
 	public handleKey(key: Key) {
 		if (this.gameState.get() == TypingGame.GameState.Ended) return; // Don't handle keys when game already ended
 
-		// I use switch because I might add ArrowLeft and similar later on
-		switch (key) {
-			case Key.Backspace:
-				this.removeCharacter();
-				break;
+		if (key == Key.Backspace) {
+			this.removedCharacter();
+		} else {
+			if (key.length != 1) return;
 
-			default:
-				if (key.length != 1) return; // Ignore any key presses that use a key identifier longer than 1 character (so only allow "A" or "1")
-				this.insertCharacter(key);
+			this.typedCharacter(key);
 		}
 	}
 
-	protected removeCharacter() {
+	/**
+	 * Called when the user removed a character with backspace.
+	 */
+	protected removedCharacter() {
 		const currPos = this.cursorPosition.get();
 		if (currPos == 0) return;
 
@@ -148,18 +213,26 @@ class TypingGame {
 		this.setCurrentCharacterState(TypingGame.CharacterState.Unreached);
 	}
 
-	protected insertCharacter(character: string) {
+	/**
+	 * Called when the user typed any character.
+	 * @param character - The character the user typed.
+	 */
+	protected typedCharacter(character: string) {
 		if (this.gameState.get() == TypingGame.GameState.NotStarted) this.startGame(); // Start game when first character was entered
 
 		if (character == this.cursorCharacter.get()) {
+			// Check if a mistake was made earlier at current position
+			if (this.mistakePositions.get().includes(this.cursorPosition.get())) {
+				this.correctedMistakes.set(this.correctedMistakes.get() + 1); // Increase amount of corrected mistakes
+			}
+
 			this.setCurrentCharacterState(TypingGame.CharacterState.Correct);
 		} else {
 			this.setCurrentCharacterState(TypingGame.CharacterState.Incorrect);
-
-			this.mistakes.set(this.mistakes.get() + 1); // Increase amount of mistakes (for accuracy)
+			this.addMistakePosition();
 		}
 
-		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of typed characters (for accuracy)
+		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of typed characters
 
 		const newCursorPosition = this.cursorPosition.get() + 1;
 		this.cursorPosition.set(newCursorPosition);
@@ -174,6 +247,13 @@ class TypingGame {
 		characterStates[this.cursorPosition.get()] = state;
 
 		this.characterStates.set(characterStates);
+	}
+
+	protected addMistakePosition() {
+		let mistakePositions = this.mistakePositions.get();
+		mistakePositions.push(this.cursorPosition.get());
+
+		this.mistakePositions.set(mistakePositions);
 	}
 
 	/**
@@ -267,10 +347,14 @@ namespace TypingGame {
 		readonly wpm: ReadableAtom<number>;
 		readonly accuracy: ReadableAtom<number>;
 		readonly mistakes: ReadableAtom<number>;
+		readonly mistakePositions: ReadableAtom<number[]>;
+		readonly correctedMistakes: ReadableAtom<number>;
+		readonly uncorrectedMistakes: ReadableAtom<number>;
 		readonly typedCharacters: ReadableAtom<number>;
 		readonly gameState: ReadableAtom<GameState>;
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;
+		readonly elapsedTime: ReadableAtom<number | null>;
 		readonly cursorPosition: ReadableAtom<number>;
 		readonly cursorCharacter: ReadableAtom<string>;
 	}

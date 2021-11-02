@@ -11,7 +11,8 @@
 		wpm,
 		cps,
 		accuracy,
-		mistakes
+		mistakes,
+		correctedMistakes
 	} = typingGame.getStores();
 </script>
 
@@ -31,6 +32,7 @@
 	CPS: {$cps}<br>
 	Accuracy: {$accuracy}%<br>
 	Mistakes: {$mistakes}<br>
+	Corrected Mistakes: {$correctedMistakes}<br>
 </p>
 
 <style>
