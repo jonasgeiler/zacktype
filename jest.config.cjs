@@ -10,5 +10,8 @@ module.exports = {
 		'^.+\\.js$':     'babel-jest',
 	},
 	moduleFileExtensions: [ 'js', 'ts', 'svelte' ],
+	moduleNameMapper: {
+		'^\$lib/(.*)$': '<rootDir>/src/lib/$1',
+	},
 	testEnvironment: "jsdom"
 };
