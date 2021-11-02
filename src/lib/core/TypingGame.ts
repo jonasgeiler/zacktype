@@ -14,6 +14,7 @@ class TypingGame {
 	protected gameState: WritableAtom<TypingGame.GameState>;
 	protected startTime: WritableAtom<number | null>;
 	protected endTime: WritableAtom<number | null>;
+	protected cursorPosition: WritableAtom<number>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -41,6 +42,7 @@ class TypingGame {
 		this.accuracy = atom(100);
 		this.startTime = atom(null);
 		this.endTime = atom(null);
+		this.cursorPosition = atom(0);
 	}
 
 	/**
