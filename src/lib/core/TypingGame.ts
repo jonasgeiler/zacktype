@@ -29,9 +29,6 @@ class TypingGame {
 	/** Amount of mistakes that the user made, but then corrected */
 	protected correctedMistakes: WritableAtom<number>;
 
-	/** Amount of mistakes that the user made and didn't correct */
-	protected uncorrectedMistakes: ReadableAtom<number>;
-
 	/** Total amount of characters typed in by user */
 	protected typedCharacters: WritableAtom<number>;
 
@@ -43,9 +40,6 @@ class TypingGame {
 
 	/** Time the user finished typing */
 	protected endTime: WritableAtom<number | null>;
-
-	/** Total time the user took to finish typing */
-	protected elapsedTime: ReadableAtom<number | null>;
 
 	/** Position of the cursor in the text */
 	protected cursorPosition: WritableAtom<number>;
@@ -102,34 +96,21 @@ class TypingGame {
 			$mistakePositions => $mistakePositions.length,
 		);
 
-		// Init uncorrectedMistakes store
-		this.uncorrectedMistakes = computed(
-			[ this.mistakes, this.correctedMistakes ],
-			($mistakes, $correctedMistakes) => $mistakes - $correctedMistakes,
-		);
-
-		// Init elapsedTime store
-		this.elapsedTime = computed(
-			[ this.startTime, this.endTime ],
-			($startTime, $endTime) => {
-				if ($startTime == null || $endTime == null) return null;
-				return $endTime - $startTime;
-			},
-		);
-
 		// Init wpm store
 		this.wpm = computed(
-			[ this.typedCharacters, this.elapsedTime, this.uncorrectedMistakes ],
-			($typedCharacters, $elapsedTime, $uncorrectedMistakes) => {
-				if ($elapsedTime == null) return 0;
+			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakes ],
+			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
+				if ($startTime == null || $endTime == null) return 0;
 
 				// https://www.speedtypingonline.com/typing-equations
 
 				const typedWords = $typedCharacters / 5; // We use 5 here, because that's the average word length in the English language and therefore commonly used to calculate WPM
-				const elapsedSeconds = $elapsedTime / 1000; // Convert milliseconds to seconds
+				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
+				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
 				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
-				const errorRate = $uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
+				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
 
 				return Math.round(grossWPM - errorRate); // Calculate net WPM
 			},
@@ -168,8 +149,6 @@ class TypingGame {
 			cps:                 this.cps,
 			accuracy:            this.accuracy,
 			mistakes:            this.mistakes,
-			uncorrectedMistakes: this.uncorrectedMistakes,
-			elapsedTime:         this.elapsedTime,
 			cursorCharacter:     this.cursorCharacter,
 		};
 	}
@@ -353,12 +332,10 @@ namespace TypingGame {
 		readonly mistakes: ReadableAtom<number>;
 		readonly mistakePositions: ReadableAtom<number[]>;
 		readonly correctedMistakes: ReadableAtom<number>;
-		readonly uncorrectedMistakes: ReadableAtom<number>;
 		readonly typedCharacters: ReadableAtom<number>;
 		readonly gameState: ReadableAtom<GameState>;
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;
-		readonly elapsedTime: ReadableAtom<number | null>;
 		readonly cursorPosition: ReadableAtom<number>;
 		readonly cursorCharacter: ReadableAtom<string>;
 	}
