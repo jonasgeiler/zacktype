@@ -112,6 +112,7 @@ class TypingGame {
 				if ($startTime == null || $endTime == null) return 0;
 
 				// https://www.speedtypingonline.com/typing-equations
+				// This uses the same method but with seconds instead of minutes, and characters instead of words
 
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
