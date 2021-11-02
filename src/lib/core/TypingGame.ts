@@ -6,9 +6,10 @@ class TypingGame {
 
 	public text: string;
 	public characters: Writable<TypingGame.Character[]>;
-	public wpm: number;
-	public cps: number;
-	public accuracy: number;
+	public wpm: Writable<number>;
+	public cps: Writable<number>;
+	public accuracy: Writable<number>;
+	public gameState: Writable<TypingGame.GameState>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -32,7 +33,7 @@ class TypingGame {
 		// Init character store
 		this.characters = writable(characters);
 
-		
+		this.gameState = writable(TypingGame.GameState.NotStarted);
 	}
 
 	protected generateText(): string {
@@ -108,6 +109,12 @@ namespace TypingGame {
 		Unreached,
 		Correct,
 		Incorrect
+	}
+
+	export enum GameState {
+		NotStarted,
+		Started,
+		Ended
 	}
 
 	export interface Character {
