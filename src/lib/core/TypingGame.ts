@@ -1,15 +1,16 @@
 import dictionary from '$lib/core/dictionary';
-import type { Writable } from 'svelte/store';
+import type { Readable, Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
 class TypingGame {
 
 	public text: string;
-	public characters: Writable<TypingGame.Character[]>;
-	public wpm: Writable<number>;
-	public cps: Writable<number>;
-	public accuracy: Writable<number>;
-	public gameState: Writable<TypingGame.GameState>;
+
+	protected characters: Writable<TypingGame.Character[]>;
+	protected cps: Writable<number>;
+	protected wpm: Writable<number>;
+	protected accuracy: Writable<number>;
+	protected gameState: Writable<TypingGame.GameState>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -36,6 +37,22 @@ class TypingGame {
 		this.gameState = writable(TypingGame.GameState.NotStarted);
 	}
 
+	/**
+	 * This exposes all internal writable stores as readable stores for use on the frontend.
+	 */
+	public getStores(): TypingGame.Stores {
+		// Note: Writable stores are objects with only a subscribe method
+		return {
+			cps: { subscribe: this.cps.subscribe },
+			wpm: { subscribe: this.wpm.subscribe },
+			accuracy: { subscribe: this.accuracy.subscribe },
+			gameState: { subscribe: this.gameState.subscribe },
+		}
+	}
+
+	/**
+	 * Generates a random paragraph of text.
+	 */
 	protected generateText(): string {
 		const { approximateTextLength, generateUppercaseLetters, generateSpecialCharacters } = this.options;
 
@@ -120,6 +137,13 @@ namespace TypingGame {
 	export interface Character {
 		char: string;
 		state: CharacterState;
+	}
+
+	export interface Stores {
+		readonly cps: Readable<number>;
+		readonly wpm: Readable<number>;
+		readonly accuracy: Readable<number>;
+		readonly gameState: Readable<GameState>;
 	}
 
 	export interface Options {
