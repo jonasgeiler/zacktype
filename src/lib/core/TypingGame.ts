@@ -101,8 +101,9 @@ class TypingGame {
 				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
 				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
+				const netWPM = grossWPM - errorRate; // Calculate net WPM
 
-				return +(grossWPM - errorRate).toFixed(1); // Calculate net WPM
+				return +Math.max(netWPM, 0).toFixed(1);
 			},
 		);
 
@@ -120,8 +121,9 @@ class TypingGame {
 				const grossCPS = $typedCharacters / elapsedSeconds; // Calculate gross CPS
 				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
+				const netCPS = grossCPS - errorRate; // Calculate net CPS
 
-				return +(grossCPS - errorRate).toFixed(1); // Calculate net CPS
+				return +Math.max(netCPS, 0).toFixed(1);
 			},
 		);
 
