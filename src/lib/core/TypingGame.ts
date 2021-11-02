@@ -91,14 +91,6 @@ class TypingGame {
 	}
 
 	/**
-	 * Starts the game.
-	 */
-	public startGame() {
-		this.startTime.set(Date.now()); // Store the time when user started typing
-		this.gameState.set(TypingGame.GameState.Started); // Change game state to "started"
-	}
-
-	/**
 	 * Handle key presses by the user.
 	 * @param key - The key property from an `KeyboardEvent`
 	 */
@@ -117,8 +109,19 @@ class TypingGame {
 		}
 	}
 
+	/**
+	 * Starts the game.
+	 */
+	protected startGame() {
+		this.startTime.set(Date.now()); // Store the time when user started typing
+		this.gameState.set(TypingGame.GameState.Started); // Change game state to "started"
+	}
+
 	protected removeCharacter() {
-		this.cursorPosition.set(this.cursorPosition.get() - 1);
+		const currPos = this.cursorPosition.get();
+		if (currPos == 0) return;
+
+		this.cursorPosition.set(currPos - 1);
 		this.setCurrentCharacterState(TypingGame.CharacterState.Unreached);
 	}
 
