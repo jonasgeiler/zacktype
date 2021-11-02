@@ -1,4 +1,4 @@
-import dictionary from '$lib/core/dictionary';
+import dictionary from './dictionary';
 import type { Readable, Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
