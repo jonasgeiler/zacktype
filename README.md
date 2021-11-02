@@ -1,4 +1,4 @@
-# zacktype
+![zacktype](public/social-preview.png)
 
 ## Goals of this project
 
