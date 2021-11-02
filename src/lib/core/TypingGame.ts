@@ -118,15 +118,27 @@ class TypingGame {
 	}
 
 	protected removeCharacter() {
-
+		this.cursorPosition.set(this.cursorPosition.get() - 1);
+		this.setCurrentCharacterState(TypingGame.CharacterState.Unreached);
 	}
 
 	protected insertCharacter(character: string) {
 		if (this.gameState.get() == TypingGame.GameState.NotStarted) this.startGame(); // Start game when first character was entered
 
-		if (character == this.text[this.cursorPosition.get()]) {
-
+		if (character == this.cursorCharacter.get()) {
+			this.setCurrentCharacterState(TypingGame.CharacterState.Correct);
+		} else {
+			this.setCurrentCharacterState(TypingGame.CharacterState.Incorrect);
 		}
+
+		this.cursorPosition.set(this.cursorPosition.get() + 1);
+	}
+
+	protected setCurrentCharacterState(state: TypingGame.CharacterState) {
+		let characterStates = this.characterStates.get();
+		characterStates[this.cursorPosition.get()] = state;
+
+		this.characterStates.set(characterStates);
 	}
 
 	/**
