@@ -1,10 +1,10 @@
-![zacktype](public/social-preview.png)
+[![zacktype](public/social-preview.png)](https://zacktype.skayo.dev)
 
 ## Goals of this project
 
-- [ ] Measure typing speed with a simple test
-- [ ] Minimalistic front end (no framework)
-- [ ] Have most of the game logic in its own class, separate from the front end, so writing unit tests is much simpler (only expose some stores)
+- Measure typing speed with a simple test
+- Minimalistic front end (no framework)
+- Have most of the game logic in its own class, separate from the front end, so writing unit tests is much simpler (only expose some stores)
 
 ## TODO
 
