@@ -1,5 +1,6 @@
 import dictionary from '$lib/core/dictionary';
 import type { Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
 class TypingGame {
 
@@ -16,7 +17,22 @@ class TypingGame {
 			generateSpecialCharacters: true,
 		},
 	) {
+		// Use supplied text or generate one
 		this.text = options.text ?? this.generateText();
+
+		// Make character array
+		let characters: TypingGame.Character[] = [];
+		for (let char of this.text) {
+			characters.push({
+				char,
+				state: TypingGame.CharacterState.Unreached,
+			});
+		}
+
+		// Init character store
+		this.characters = writable(characters);
+
+		
 	}
 
 	protected generateText(): string {
