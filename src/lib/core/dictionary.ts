@@ -1,8 +1,4 @@
 const dictionary = [
-	// I've added some apostrophe words:
-	'doesn\'t', 'can\'t', 'won\'t', 'don\'t', 'let\'s', 'here\'s', 'didn\'t', 'that\'ll', 'she\'s', 'wouldn\'t',
-	'he\'s', 'it\'s', 'there\'s', 'they\'re', 'you\'ve', 'you\'re', 'couldn\'t', 'shouldn\'t', 'isn\'t',
-
 	'ability', 'able', 'aboard', 'about', 'above', 'accept', 'accident', 'according',
 	'account', 'accurate', 'acres', 'across', 'act', 'action', 'active', 'activity',
 	'actual', 'actually', 'add', 'addition', 'additional', 'adjective', 'adult', 'adventure',
