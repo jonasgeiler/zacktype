@@ -88,29 +88,40 @@ class TypingGame {
 
 		// Init wpm store
 		this.wpm = computed(
-			[ this.typedCharacters, this.startTime, this.endTime ],
-			($typedCharacters, $startTime, $endTime) => {
+			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakes ],
+			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
 				if ($startTime == null || $endTime == null) return 0;
+
+				// https://www.speedtypingonline.com/typing-equations
 
 				const typedWords = $typedCharacters / 5; // We use 5 here, because that's the average word length in the English language and therefore commonly used to calculate WPM
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
+				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
+				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
 
-				return +(typedWords / elapsedMinutes).toFixed(1); // Calculate net WPM
+				return +(grossWPM - errorRate).toFixed(1); // Calculate net WPM
 			},
 		);
 
 		// Init cpm store
 		this.cps = computed(
-			[ this.typedCharacters, this.startTime, this.endTime ],
-			($typedCharacters, $startTime, $endTime) => {
+			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakes ],
+			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
 				if ($startTime == null || $endTime == null) return 0;
+
+				// https://www.speedtypingonline.com/typing-equations
+				// This uses the same method but with seconds instead of minutes, and characters instead of words
 
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
+				const grossCPS = $typedCharacters / elapsedSeconds; // Calculate gross CPS
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
+				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
 
-				return +($typedCharacters / elapsedSeconds).toFixed(1); // Calculate net CPS
+				return +(grossCPS - errorRate).toFixed(1); // Calculate net CPS
 			},
 		);
 
