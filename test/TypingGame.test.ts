@@ -1,4 +1,4 @@
-import TypingGame from '$lib/core/TypingGame';
+import TypingGame from '$lib/game/TypingGame';
 import type { Readable } from 'svelte/store';
 
 describe('providing text', () => {

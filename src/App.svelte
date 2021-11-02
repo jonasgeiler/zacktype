@@ -1,6 +1,7 @@
 <script lang="ts">
-	import TypingGame from '$lib/core/TypingGame';
+	import TypingGame from '$lib/game/TypingGame';
 	import { slide } from 'svelte/transition';
+	import type { Key } from 'ts-key-enum';
 
 	const typingGame = new TypingGame();
 
@@ -17,6 +18,11 @@
 
 	let inputField: HTMLInputElement;
 
+	function handleInput(event: KeyboardEvent) {
+		typingGame.handleKey(event.key as Key);
+		inputField.value = '';
+	}
+
 	function focusInputField() {
 		inputField.focus();
 	}
@@ -27,7 +33,7 @@
 	}
 </script>
 
-<input bind:this={inputField} on:keydown={e => typingGame.handleKey(e.key)}
+<input bind:this={inputField} on:keydown={handleInput}
        id="inputField" type="text" autofocus autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 
 <div id="game">
