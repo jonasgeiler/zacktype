@@ -6,10 +6,10 @@ import dictionary from './dictionary';
 class TypingGame {
 
 	/** The text used in the game */
-	public text: string;
+	protected text: WritableAtom<string>;
 
 	/** Holds the info about all characters in the text */
-	protected characters: WritableAtom<TypingGame.Character[]>;
+	protected characterStates: WritableAtom<TypingGame.CharacterState[]>;
 
 	/** User's characters/second score */
 	protected cps: WritableAtom<number>;
@@ -33,7 +33,7 @@ class TypingGame {
 	protected cursorPosition: WritableAtom<number>;
 
 	/** Holds the current character at cursor position */
-	protected cursorCharacter: ReadableAtom<TypingGame.Character>;
+	protected cursorCharacter: ReadableAtom<string>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -42,19 +42,17 @@ class TypingGame {
 			generateSpecialCharacters: true,
 		},
 	) {
-		this.text = options.text ?? this.generateText(); // Use supplied text or generate one
+		// Init text store
+		this.text = atom(options.text ?? this.generateText()); // Use supplied text or generate one
 
-		// Make character array
-		let characters: TypingGame.Character[] = [];
-		for (let char of this.text) {
-			characters.push({
-				char,
-				state: TypingGame.CharacterState.Unreached,
-			});
+		// Make initial character states array
+		let characterStates: TypingGame.CharacterState[] = [];
+		for (let char of this.text.get()) {
+			characterStates.push(TypingGame.CharacterState.Unreached);
 		}
 
-		// Init stores
-		this.characters = atom(characters);
+		// Init other stores
+		this.characterStates = atom(characterStates);
 		this.gameState = atom(TypingGame.GameState.NotStarted);
 		this.cps = atom(0);
 		this.wpm = atom(0);
@@ -65,8 +63,8 @@ class TypingGame {
 
 		// Init cursorCharacter store
 		this.cursorCharacter = computed(
-			[ this.characters, this.cursorPosition ],
-			($characters, $cursorPosition) => $characters[$cursorPosition],
+			[ this.text, this.cursorPosition ],
+			($text, $cursorPosition) => $text[$cursorPosition],
 		);
 	}
 
@@ -75,18 +73,19 @@ class TypingGame {
 	 */
 	public getStores(): TypingGame.Stores {
 		// Omit the set function for each store:
-		const { set: a, ...characters } = this.characters;
-		const { set: b, ...cps } = this.cps;
-		const { set: c, ...wpm } = this.wpm;
-		const { set: d, ...accuracy } = this.accuracy;
-		const { set: e, ...gameState } = this.gameState;
-		const { set: f, ...startTime } = this.startTime;
-		const { set: g, ...endTime } = this.endTime;
-		const { set: h, ...cursorPosition } = this.cursorPosition;
+		const { set: a, ...text } = this.text;
+		const { set: b, ...characterStates } = this.characterStates;
+		const { set: c, ...cps } = this.cps;
+		const { set: d, ...wpm } = this.wpm;
+		const { set: e, ...accuracy } = this.accuracy;
+		const { set: f, ...gameState } = this.gameState;
+		const { set: g, ...startTime } = this.startTime;
+		const { set: h, ...endTime } = this.endTime;
+		const { set: i, ...cursorPosition } = this.cursorPosition;
 
 		// Return the readable stores
 		return {
-			characters, cps, wpm, accuracy, gameState, startTime, endTime, cursorPosition,
+			text, characterStates, cps, wpm, accuracy, gameState, startTime, endTime, cursorPosition,
 			cursorCharacter: this.cursorCharacter
 		};
 	}
@@ -214,13 +213,9 @@ namespace TypingGame {
 		Ended
 	}
 
-	export interface Character {
-		char: string;
-		state: CharacterState;
-	}
-
 	export interface Stores {
-		readonly characters: ReadableAtom<Character[]>;
+		readonly text: ReadableAtom<string>
+		readonly characterStates: ReadableAtom<CharacterState[]>;
 		readonly cps: ReadableAtom<number>;
 		readonly wpm: ReadableAtom<number>;
 		readonly accuracy: ReadableAtom<number>;
@@ -228,7 +223,7 @@ namespace TypingGame {
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;
 		readonly cursorPosition: ReadableAtom<number>;
-		readonly cursorCharacter: ReadableAtom<Character>;
+		readonly cursorCharacter: ReadableAtom<string>;
 	}
 
 	export interface Options {

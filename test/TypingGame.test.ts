@@ -8,7 +8,9 @@ describe('providing text', () => {
 			text: 'Hello World!',
 		});
 
-		expect(tg.text).toEqual('Hello World!');
+		const { text } = tg.getStores();
+
+		expect(text.get()).toEqual('Hello World!');
 	});
 
 });
@@ -23,9 +25,11 @@ describe('generating text', () => {
 			generateUppercaseLetters:  true,
 		});
 
-		expect(tg.text).toEqual(expect.any(String));
-		expect(tg.text.length).toBeGreaterThan(10);
-		expect(tg.text).toMatch(/^[a-zA-Z.,?!\- ]+$/);
+		const { text } = tg.getStores();
+
+		expect(text.get()).toEqual(expect.any(String));
+		expect(text.get().length).toBeGreaterThan(10);
+		expect(text.get()).toMatch(/^[a-zA-Z.,?!\- ]+$/);
 	});
 
 	test('it doesn\'t have special characters in the generated text when disabling the generateSpecialCharacters option', () => {
@@ -36,7 +40,9 @@ describe('generating text', () => {
 			generateUppercaseLetters:  true,
 		});
 
-		expect(tg.text).toMatch(/^[^.,?!\-]+$/);
+		const { text } = tg.getStores();
+
+		expect(text.get()).toMatch(/^[^.,?!\-]+$/);
 	});
 
 	test('it doesn\'t have uppercase letters in the generated text when disabling the generateUppercaseLetters option', () => {
@@ -47,7 +53,9 @@ describe('generating text', () => {
 			generateUppercaseLetters:  false,
 		});
 
-		expect(tg.text).toMatch(/^[^A-Z]+$/);
+		const { text } = tg.getStores();
+
+		expect(text.get()).toMatch(/^[^A-Z]+$/);
 	});
 
 	test('it doesn\'t have uppercase letters or special characters in the generated text when disabling both the generateUppercaseLetters and the generateSpecialCharacters options', () => {
@@ -58,7 +66,9 @@ describe('generating text', () => {
 			generateUppercaseLetters:  false,
 		});
 
-		expect(tg.text).toMatch(/^[^A-Z.,?!\-]+$/);
+		const { text } = tg.getStores();
+
+		expect(text.get()).toMatch(/^[^A-Z.,?!\-]+$/);
 	});
 
 });
@@ -79,8 +89,8 @@ describe('using the stores', () => {
 	test('it correctly provides a readable characters store', () => {
 		const tg = new TypingGame();
 
-		const { characters } = tg.getStores();
-		testReadableStore(characters);
+		const { characterStates } = tg.getStores();
+		testReadableStore(characterStates);
 	});
 
 	test('it correctly provides a readable gameState store', () => {
@@ -121,10 +131,7 @@ describe('using the stores', () => {
 		const subscriber = jest.fn();
 		cursorCharacter.subscribe(subscriber);
 
-		expect(subscriber).toHaveBeenCalledWith({
-			char:  'H',
-			state: TypingGame.CharacterState.Unreached,
-		});
+		expect(subscriber).toHaveBeenCalledWith('H');
 	});
 
 });
