@@ -12,6 +12,8 @@ class TypingGame {
 	protected wpm: WritableAtom<number>;
 	protected accuracy: WritableAtom<number>;
 	protected gameState: WritableAtom<TypingGame.GameState>;
+	protected startTime: WritableAtom<number | null>;
+	protected endTime: WritableAtom<number | null>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -31,11 +33,14 @@ class TypingGame {
 			});
 		}
 
-		this.characters = atom(characters); // Init character store
-		this.gameState = atom(TypingGame.GameState.NotStarted); // Init gameState store
-		this.cps = atom(0); // Init cps store
-		this.wpm = atom(0); // Init wpm store
-		this.accuracy = atom(100); // Init accuracy store
+		// Init stores
+		this.characters = atom(characters);
+		this.gameState = atom(TypingGame.GameState.NotStarted);
+		this.cps = atom(0);
+		this.wpm = atom(0);
+		this.accuracy = atom(100);
+		this.startTime = atom(null);
+		this.endTime = atom(null);
 	}
 
 	/**
