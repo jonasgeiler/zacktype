@@ -1,20 +1,39 @@
 import type { ReadableAtom, WritableAtom } from 'nanostores';
-import { atom } from 'nanostores';
+import { atom, computed } from 'nanostores';
 import { Key } from 'ts-key-enum';
 import dictionary from './dictionary';
 
 class TypingGame {
 
+	/** The text used in the game */
 	public text: string;
 
+	/** Holds the info about all characters in the text */
 	protected characters: WritableAtom<TypingGame.Character[]>;
+
+	/** User's characters/second score */
 	protected cps: WritableAtom<number>;
+
+	/** User's words/minute score */
 	protected wpm: WritableAtom<number>;
+
+	/** User's typing accuracy */
 	protected accuracy: WritableAtom<number>;
+
+	/** Current state of the game */
 	protected gameState: WritableAtom<TypingGame.GameState>;
+
+	/** Time the user started typing */
 	protected startTime: WritableAtom<number | null>;
+
+	/** Time the user finished typing */
 	protected endTime: WritableAtom<number | null>;
+
+	/** Position of the cursor in the text */
 	protected cursorPosition: WritableAtom<number>;
+
+	/** Holds the current character at cursor position */
+	protected cursorCharacter: ReadableAtom<TypingGame.Character>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -43,6 +62,12 @@ class TypingGame {
 		this.startTime = atom(null);
 		this.endTime = atom(null);
 		this.cursorPosition = atom(0);
+
+		// Init cursorCharacter store
+		this.cursorCharacter = computed(
+			[ this.characters, this.cursorPosition ],
+			($characters, $cursorPosition) => $characters[$cursorPosition],
+		);
 	}
 
 	/**
@@ -61,7 +86,8 @@ class TypingGame {
 
 		// Return the readable stores
 		return {
-			characters, cps, wpm, accuracy, gameState, startTime, endTime, cursorPosition
+			characters, cps, wpm, accuracy, gameState, startTime, endTime, cursorPosition,
+			cursorCharacter: this.cursorCharacter
 		};
 	}
 
@@ -97,7 +123,11 @@ class TypingGame {
 	}
 
 	protected insertCharacter(character: string) {
+		if (this.gameState.get() == TypingGame.GameState.NotStarted) this.startGame(); // Start game when first character was entered
 
+		if (character == this.text[this.cursorPosition.get()]) {
+
+		}
 	}
 
 	/**
@@ -198,6 +228,7 @@ namespace TypingGame {
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;
 		readonly cursorPosition: ReadableAtom<number>;
+		readonly cursorCharacter: ReadableAtom<Character>;
 	}
 
 	export interface Options {

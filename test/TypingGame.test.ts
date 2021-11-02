@@ -5,7 +5,7 @@ describe('providing text', () => {
 
 	test('it uses the provided text', () => {
 		const tg = new TypingGame({
-			text: 'Hello World!'
+			text: 'Hello World!',
 		});
 
 		expect(tg.text).toEqual('Hello World!');
@@ -17,7 +17,7 @@ describe('generating text', () => {
 
 	test('it generates random text when no text was provided', () => {
 		const tg = new TypingGame({
-			text: null,
+			text:                      null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: true,
 			generateUppercaseLetters:  true,
@@ -30,7 +30,7 @@ describe('generating text', () => {
 
 	test('it doesn\'t have special characters in the generated text when disabling the generateSpecialCharacters option', () => {
 		const tg = new TypingGame({
-			text: null,
+			text:                      null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: false,
 			generateUppercaseLetters:  true,
@@ -41,7 +41,7 @@ describe('generating text', () => {
 
 	test('it doesn\'t have uppercase letters in the generated text when disabling the generateUppercaseLetters option', () => {
 		const tg = new TypingGame({
-			text: null,
+			text:                      null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: true,
 			generateUppercaseLetters:  false,
@@ -52,7 +52,7 @@ describe('generating text', () => {
 
 	test('it doesn\'t have uppercase letters or special characters in the generated text when disabling both the generateUppercaseLetters and the generateSpecialCharacters options', () => {
 		const tg = new TypingGame({
-			text: null,
+			text:                      null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: false,
 			generateUppercaseLetters:  false,
@@ -109,6 +109,22 @@ describe('using the stores', () => {
 
 		const { accuracy } = tg.getStores();
 		testReadableStore(accuracy);
+	});
+
+	test('cursorCharacter holds the current character', () => {
+		const tg = new TypingGame({
+			text: 'Hello World!',
+		});
+
+		const { cursorCharacter } = tg.getStores();
+
+		const subscriber = jest.fn();
+		cursorCharacter.subscribe(subscriber);
+
+		expect(subscriber).toHaveBeenCalledWith({
+			char:  'H',
+			state: TypingGame.CharacterState.Unreached,
+		});
 	});
 
 });
