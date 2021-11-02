@@ -53,12 +53,34 @@ class TypingGame {
 		const { set: c, ...wpm } = this.wpm;
 		const { set: d, ...accuracy } = this.accuracy;
 		const { set: e, ...gameState } = this.gameState;
+		const { set: f, ...startTime } = this.startTime;
+		const { set: g, ...endTime } = this.endTime;
 
-		return { characters, cps, wpm, accuracy, gameState }; // Return the readable stores
+		// Return the readable stores
+		return {
+			characters, cps, wpm, accuracy, gameState, startTime, endTime,
+		};
 	}
 
-	public handleKeyPress(key: Key) {
+	/**
+	 * Starts the game
+	 */
+	public startGame() {
+		this.startTime.set(Date.now()); // Store the time when user started typing
+		this.gameState.set(TypingGame.GameState.Started); // Change game state to "started"
+	}
 
+	public handleKey(key: Key) {
+		switch (this.gameState.get()) {
+			case TypingGame.GameState.NotStarted:
+				this.startGame(); // Start the game if not yet started
+				break;
+
+			case TypingGame.GameState.Ended:
+				return;
+		}
+
+		console.log('KEY PRESS', key);
 	}
 
 	/**
@@ -156,6 +178,8 @@ namespace TypingGame {
 		readonly wpm: ReadableAtom<number>;
 		readonly accuracy: ReadableAtom<number>;
 		readonly gameState: ReadableAtom<GameState>;
+		readonly startTime: ReadableAtom<number | null>;
+		readonly endTime: ReadableAtom<number | null>;
 	}
 
 	export interface Options {
