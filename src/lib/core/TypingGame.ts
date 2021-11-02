@@ -48,7 +48,7 @@ class TypingGame {
 	protected cursorCharacter: ReadableAtom<string>;
 
 	constructor(
-		protected options: TypingGame.Options = {}
+		protected options: TypingGame.Options = {},
 	) {
 		this.options.text = options.text ?? null;
 		this.options.approximateTextLength = options.approximateTextLength ?? 300;
@@ -61,7 +61,7 @@ class TypingGame {
 		// Make initial character states array
 		let characterStates: TypingGame.CharacterState[] = [];
 		for (let char of this.text.get()) {
-			characterStates.push(TypingGame.CharacterState.Unreached);
+			characterStates.push(TypingGame.CharacterState.None);
 		}
 
 		// Init other stores
@@ -155,7 +155,7 @@ class TypingGame {
 		// Make initial character states array
 		let characterStates: TypingGame.CharacterState[] = [];
 		for (let char of this.text.get()) {
-			characterStates.push(TypingGame.CharacterState.Unreached);
+			characterStates.push(TypingGame.CharacterState.None);
 		}
 
 		// Reset other stores
@@ -187,11 +187,11 @@ class TypingGame {
 		// Return the readable stores
 		return {
 			text, characterStates, mistakePositions, correctedMistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
-			wpm:                 this.wpm,
-			cps:                 this.cps,
-			accuracy:            this.accuracy,
-			mistakes:            this.mistakes,
-			cursorCharacter:     this.cursorCharacter,
+			wpm:             this.wpm,
+			cps:             this.cps,
+			accuracy:        this.accuracy,
+			mistakes:        this.mistakes,
+			cursorCharacter: this.cursorCharacter,
 		};
 	}
 
@@ -231,11 +231,18 @@ class TypingGame {
 	 * Called when the user removed a character with backspace.
 	 */
 	protected removedCharacter() {
-		const currPos = this.cursorPosition.get();
-		if (currPos == 0) return;
+		// Get current store values
+		const cursorPosition = this.cursorPosition.get();
+		const characterStates = this.characterStates.get();
 
-		this.cursorPosition.set(currPos - 1);
-		this.setCurrentCharacterState(TypingGame.CharacterState.Unreached);
+		// If cursor is at start of text, don't do anything
+		if (cursorPosition == 0) return;
+
+		// Set previous character state to none
+		characterStates[cursorPosition - 1] = TypingGame.CharacterState.None;
+
+		this.cursorPosition.set(cursorPosition - 1); // Move cursor backwards
+		this.characterStates.set(characterStates); // Update character states
 	}
 
 	/**
@@ -243,42 +250,38 @@ class TypingGame {
 	 * @param character - The character the user typed.
 	 */
 	protected typedCharacter(character: string) {
-		if (this.gameState.get() == TypingGame.GameState.NotStarted) this.startGame(); // Start game when first character was entered
+		if (this.gameState.get() == TypingGame.GameState.NotStarted) this.startGame(); // Start game when not yet started
 
+		// Get current store values
+		const characterStates = this.characterStates.get();
+		const cursorPosition = this.cursorPosition.get();
+		const mistakePositions = this.mistakePositions.get();
+
+		// Check if character is correct
 		if (character == this.cursorCharacter.get()) {
 			// Check if a mistake was made earlier at current position
-			if (this.mistakePositions.get().includes(this.cursorPosition.get())) {
+			if (mistakePositions.includes(cursorPosition)) {
 				this.correctedMistakes.set(this.correctedMistakes.get() + 1); // Increase amount of corrected mistakes
 			}
 
-			this.setCurrentCharacterState(TypingGame.CharacterState.Correct);
+			characterStates[cursorPosition] = TypingGame.CharacterState.Correct; // Set current character state to correct
+
+			this.characterStates.set(characterStates); // Update character states
 		} else {
-			this.setCurrentCharacterState(TypingGame.CharacterState.Incorrect);
-			this.addMistakePosition();
+			characterStates[cursorPosition] = TypingGame.CharacterState.Incorrect; // Set current character state to incorrect
+			mistakePositions.push(cursorPosition); // Add cursor position to mistake positions
+
+			this.characterStates.set(characterStates); // Update character states
+			this.mistakePositions.set(mistakePositions); // Update mistake positions
 		}
 
 		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of typed characters
+		this.cursorPosition.set(cursorPosition + 1); // Move cursor forward
 
-		const newCursorPosition = this.cursorPosition.get() + 1;
-		this.cursorPosition.set(newCursorPosition);
-
-		if (newCursorPosition == this.text.get().length) {
-			this.gameOver();
+		// Check if end of text was reached
+		if (cursorPosition + 1 == this.text.get().length) {
+			this.gameOver(); // End the game
 		}
-	}
-
-	protected setCurrentCharacterState(state: TypingGame.CharacterState) {
-		let characterStates = this.characterStates.get();
-		characterStates[this.cursorPosition.get()] = state;
-
-		this.characterStates.set(characterStates);
-	}
-
-	protected addMistakePosition() {
-		let mistakePositions = this.mistakePositions.get();
-		mistakePositions.push(this.cursorPosition.get());
-
-		this.mistakePositions.set(mistakePositions);
 	}
 
 	/**
@@ -354,7 +357,7 @@ class TypingGame {
 namespace TypingGame {
 
 	export enum CharacterState {
-		Unreached,
+		None,
 		Correct,
 		Incorrect
 	}
