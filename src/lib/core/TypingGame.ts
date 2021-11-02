@@ -1,22 +1,37 @@
-
+import type { Writable } from 'svelte/store';
 
 class TypingGame {
 
+	public text: string;
+	public characters: Writable<TypingGame.Character[]>;
+	public wpm: number;
+	public cps: number;
+	public accuracy: number;
 
+	constructor(
+		protected options: TypingGame.Options = {
+
+		}
+	) {
+	}
 
 }
 
 namespace TypingGame {
 
-	enum CharacterState {
+	export enum CharacterState {
 		Unreached,
 		Correct,
 		Incorrect
 	}
 
-	interface Character {
+	export interface Character {
 		char: string;
 		state: CharacterState;
+	}
+
+	export interface Options {
+		
 	}
 
 }
