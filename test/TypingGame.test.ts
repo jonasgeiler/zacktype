@@ -1,5 +1,55 @@
-import type { Readable } from 'svelte/store';
 import TypingGame from '$lib/core/TypingGame';
+import type { Readable } from 'svelte/store';
+
+describe('generating text', () => {
+
+	test('it generates random text when no text was provided', () => {
+		const tg = new TypingGame({
+			text: null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: true,
+			generateUppercaseLetters:  true,
+		});
+
+		expect(tg.text).toEqual(expect.any(String));
+		expect(tg.text.length).toBeGreaterThan(10);
+		expect(tg.text).toMatch(/^[a-zA-Z.,?!\- ]+$/);
+	});
+
+	test('it doesn\'t have special characters in the generated text when disabling the generateSpecialCharacters option', () => {
+		const tg = new TypingGame({
+			text: null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: false,
+			generateUppercaseLetters:  true,
+		});
+
+		expect(tg.text).toMatch(/^[^.,?!\-]+$/);
+	});
+
+	test('it doesn\'t have uppercase letters in the generated text when disabling the generateUppercaseLetters option', () => {
+		const tg = new TypingGame({
+			text: null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: true,
+			generateUppercaseLetters:  false,
+		});
+
+		expect(tg.text).toMatch(/^[^A-Z]+$/);
+	});
+
+	test('it doesn\'t have uppercase letters or special characters in the generated text when disabling both the generateUppercaseLetters and the generateSpecialCharacters options', () => {
+		const tg = new TypingGame({
+			text: null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: false,
+			generateUppercaseLetters:  false,
+		});
+
+		expect(tg.text).toMatch(/^[^A-Z.,?!\-]+$/);
+	});
+
+});
 
 const testReadableStore = (store: Readable<any>) => {
 	expect(store).toHaveProperty('subscribe');
@@ -10,7 +60,7 @@ const testReadableStore = (store: Readable<any>) => {
 	store.subscribe(subscriber);
 
 	expect(subscriber).toHaveBeenCalled();
-}
+};
 
 describe('using the stores', () => {
 
