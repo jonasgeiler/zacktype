@@ -1,4 +1,4 @@
-const words = [
+const dictionary = [
 	'ability', 'able', 'aboard', 'about', 'above', 'accept', 'accident', 'according',
 	'account', 'accurate', 'acres', 'across', 'act', 'action', 'active', 'activity',
 	'actual', 'actually', 'add', 'addition', 'additional', 'adjective', 'adult', 'adventure',
@@ -245,4 +245,4 @@ const words = [
 	'your', 'yourself', 'youth', 'zero', 'zebra', 'zipper', 'zoo', 'zulu',
 ];
 
-export default words;
+export default dictionary;
