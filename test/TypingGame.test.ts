@@ -5,7 +5,7 @@ describe('providing text', () => {
 
 	test('it uses the provided text', () => {
 		const tg = new TypingGame({
-			text: 'Hello World!',
+			initialText: 'Hello World!',
 		});
 
 		const { text } = tg.getStores();
@@ -19,7 +19,7 @@ describe('generating text', () => {
 
 	test('it generates random text when no text was provided', () => {
 		const tg = new TypingGame({
-			text:                      null,
+			initialText:               null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: true,
 			generateUppercaseLetters:  true,
@@ -34,7 +34,7 @@ describe('generating text', () => {
 
 	test('it doesn\'t have special characters in the generated text when disabling the generateSpecialCharacters option', () => {
 		const tg = new TypingGame({
-			text:                      null,
+			initialText:               null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: false,
 			generateUppercaseLetters:  true,
@@ -47,7 +47,7 @@ describe('generating text', () => {
 
 	test('it doesn\'t have uppercase letters in the generated text when disabling the generateUppercaseLetters option', () => {
 		const tg = new TypingGame({
-			text:                      null,
+			initialText:               null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: true,
 			generateUppercaseLetters:  false,
@@ -60,7 +60,7 @@ describe('generating text', () => {
 
 	test('it doesn\'t have uppercase letters or special characters in the generated text when disabling both the generateUppercaseLetters and the generateSpecialCharacters options', () => {
 		const tg = new TypingGame({
-			text:                      null,
+			initialText:               null,
 			approximateTextLength:     1000,
 			generateSpecialCharacters: false,
 			generateUppercaseLetters:  false,
@@ -123,7 +123,7 @@ describe('using the stores', () => {
 
 	test('cursorCharacter holds the current character', () => {
 		const tg = new TypingGame({
-			text: 'Hello World!',
+			initialText: 'Hello World!',
 		});
 
 		const { cursorCharacter } = tg.getStores();

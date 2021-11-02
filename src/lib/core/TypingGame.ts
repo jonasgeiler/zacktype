@@ -48,14 +48,15 @@ class TypingGame {
 	protected cursorCharacter: ReadableAtom<string>;
 
 	constructor(
-		protected options: TypingGame.Options = {
-			approximateTextLength:     300,
-			generateUppercaseLetters:  true,
-			generateSpecialCharacters: true,
-		},
+		protected options: TypingGame.Options = {}
 	) {
+		this.options.text = options.text ?? null;
+		this.options.approximateTextLength = options.approximateTextLength ?? 300;
+		this.options.generateUppercaseLetters = options.generateUppercaseLetters ?? true;
+		this.options.generateSpecialCharacters = options.generateSpecialCharacters ?? true;
+
 		// Init text store
-		this.text = atom(options.text ?? this.generateText()); // Use supplied text or generate one
+		this.text = atom(this.options.text ?? this.generateText()); // Use supplied text or generate one
 
 		// Make initial character states array
 		let characterStates: TypingGame.CharacterState[] = [];
@@ -135,6 +136,37 @@ class TypingGame {
 				return Math.round((charactersTypedWithoutMistakes / $typedCharacters) * 100);
 			},
 		);
+	}
+
+	/**
+	 * Resets the whole game with new options so it can be replayed.
+	 * @param options - Options to set.
+	 */
+	public reset(options: TypingGame.Options = {}) {
+		// Use new options, if specified, or just the old ones
+		this.options.text = options.text ?? this.options.text;
+		this.options.approximateTextLength = options.approximateTextLength ?? this.options.approximateTextLength;
+		this.options.generateUppercaseLetters = options.generateUppercaseLetters ?? this.options.generateUppercaseLetters;
+		this.options.generateSpecialCharacters = options.generateSpecialCharacters ?? this.options.generateSpecialCharacters;
+
+		// Reset text
+		this.text.set(this.options.text ?? this.generateText()); // Use supplied text or generate one
+
+		// Make initial character states array
+		let characterStates: TypingGame.CharacterState[] = [];
+		for (let char of this.text.get()) {
+			characterStates.push(TypingGame.CharacterState.Unreached);
+		}
+
+		// Reset other stores
+		this.characterStates.set(characterStates);
+		this.gameState.set(TypingGame.GameState.NotStarted);
+		this.mistakePositions.set([]);
+		this.correctedMistakes.set(0);
+		this.typedCharacters.set(0);
+		this.startTime.set(null);
+		this.endTime.set(null);
+		this.cursorPosition.set(0);
 	}
 
 	/**

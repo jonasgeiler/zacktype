@@ -1,9 +1,7 @@
 <script lang="ts">
 	import TypingGame from '$lib/core/TypingGame';
 
-	const typingGame = new TypingGame({
-		text: 'Hello World!'
-	});
+	const typingGame = new TypingGame();
 	const {
 		text,
 		characterStates,
@@ -12,7 +10,7 @@
 		cps,
 		accuracy,
 		mistakes,
-		correctedMistakes
+		correctedMistakes,
 	} = typingGame.getStores();
 </script>
 
