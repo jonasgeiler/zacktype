@@ -1,3 +1,6 @@
+const { pathsToModuleNameMapper } = require('ts-jest/utils');
+const { compilerOptions } = require('./tsconfig.json');
+
 module.exports = {
 	transform:            {
 		'^.+\\.svelte$': [
@@ -10,8 +13,6 @@ module.exports = {
 		'^.+\\.js$':     'babel-jest',
 	},
 	moduleFileExtensions: [ 'js', 'ts', 'svelte' ],
-	moduleNameMapper: {
-		'^\$lib/(.*)$': '<rootDir>/src/lib/$1',
-	},
-	testEnvironment: "jsdom"
+	moduleNameMapper:     pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+	testEnvironment:      'jsdom',
 };
