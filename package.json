@@ -29,6 +29,7 @@
 		"vite-tsconfig-paths": "^3.3.17"
 	},
 	"dependencies": {
+		"nanostores": "^0.5.4",
 		"ts-key-enum": "^2.0.8"
 	}
 }
