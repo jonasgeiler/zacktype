@@ -128,6 +128,8 @@ class TypingGame {
 		this.accuracy = computed(
 			[ this.mistakePositions, this.typedCharacters ],
 			($mistakePositions, $typedCharacters) => {
+				if ($typedCharacters == 0) return 0;
+
 				const charactersTypedWithoutMistakes = ($typedCharacters - $mistakePositions.length);
 
 				return Math.round((charactersTypedWithoutMistakes / $typedCharacters) * 100);
