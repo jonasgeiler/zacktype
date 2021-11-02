@@ -79,17 +79,6 @@ class TypingGame {
 			($text, $cursorPosition) => $text[$cursorPosition],
 		);
 
-		// Init cpm store
-		this.cps = computed(
-			[ this.typedCharacters, this.startTime, this.endTime ],
-			($typedCharacters, $startTime, $endTime) => {
-				if (!$startTime || !$endTime) return 0;
-
-				const elapsedSeconds = ($endTime - $startTime) / 1000;
-				return Math.round(($typedCharacters / elapsedSeconds) * 60);
-			},
-		);
-
 		// Init mistakes store
 		this.mistakes = computed(
 			this.mistakePositions,
@@ -112,15 +101,33 @@ class TypingGame {
 				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
 
-				return Math.round(grossWPM - errorRate); // Calculate net WPM
+				return +(grossWPM - errorRate).toFixed(1); // Calculate net WPM
+			},
+		);
+
+		// Init cpm store
+		this.cps = computed(
+			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakes ],
+			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
+				if ($startTime == null || $endTime == null) return 0;
+
+				// https://www.speedtypingonline.com/typing-equations
+
+				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
+				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
+				const grossCPS = $typedCharacters / elapsedSeconds; // Calculate gross CPS
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
+				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
+
+				return +(grossCPS - errorRate).toFixed(1); // Calculate net CPS
 			},
 		);
 
 		// Init accuracy store
 		this.accuracy = computed(
-			[ this.mistakes, this.typedCharacters ],
-			($mistakes, $typedCharacters) => {
-				const charactersTypedWithoutMistakes = ($typedCharacters - $mistakes);
+			[ this.mistakePositions, this.typedCharacters ],
+			($mistakePositions, $typedCharacters) => {
+				const charactersTypedWithoutMistakes = ($typedCharacters - $mistakePositions.length);
 
 				return Math.round((charactersTypedWithoutMistakes / $typedCharacters) * 100);
 			},
