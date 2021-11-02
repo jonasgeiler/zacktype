@@ -1,6 +1,7 @@
 import dictionary from './dictionary';
 import type { Readable, Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
+import { Key } from 'ts-key-enum';
 
 class TypingGame {
 
@@ -49,6 +50,10 @@ class TypingGame {
 			accuracy: { subscribe: this.accuracy.subscribe },
 			gameState: { subscribe: this.gameState.subscribe },
 		}
+	}
+
+	public handleKeyPress(key: Key) {
+
 	}
 
 	/**

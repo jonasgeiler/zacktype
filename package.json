@@ -27,5 +27,8 @@
 		"typescript": "^4.3.2",
 		"vite": "^2.6.4",
 		"vite-tsconfig-paths": "^3.3.17"
+	},
+	"dependencies": {
+		"ts-key-enum": "^2.0.8"
 	}
 }
