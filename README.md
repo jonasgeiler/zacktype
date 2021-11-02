@@ -16,7 +16,7 @@
   - [X] Handle user input
   - [X] Handle backspace
 - [ ] Design a minimalistic front end
-  - [ ] Mockup
+  - [X] Mockup
   - [ ] Website
 - [ ] Calculate and display accuracy
 - [ ] Calculate and display WPM
@@ -24,3 +24,8 @@
 - [ ] Maybe make a light and dark theme?
 - [ ] Maybe add some settings?
 - [ ] Maybe use quotes instead of random text?
+
+## Mockups
+
+![Start View](assets/StartView.png)
+![Game Over View](assets/GameOverView.png)
