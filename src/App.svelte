@@ -143,6 +143,8 @@
 
 	#text {
 		font-size: 24px;
+		white-space: pre-wrap;
+
 		user-select: none;
 		cursor: text;
 	}
