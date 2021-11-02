@@ -1,17 +1,17 @@
+import type { ReadableAtom, WritableAtom } from 'nanostores';
+import { atom } from 'nanostores';
+import type { Key } from 'ts-key-enum';
 import dictionary from './dictionary';
-import type { Readable, Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
-import { Key } from 'ts-key-enum';
 
 class TypingGame {
 
 	public text: string;
 
-	protected characters: Writable<TypingGame.Character[]>;
-	protected cps: Writable<number>;
-	protected wpm: Writable<number>;
-	protected accuracy: Writable<number>;
-	protected gameState: Writable<TypingGame.GameState>;
+	protected characters: WritableAtom<TypingGame.Character[]>;
+	protected cps: WritableAtom<number>;
+	protected wpm: WritableAtom<number>;
+	protected accuracy: WritableAtom<number>;
+	protected gameState: WritableAtom<TypingGame.GameState>;
 
 	constructor(
 		protected options: TypingGame.Options = {
@@ -31,25 +31,25 @@ class TypingGame {
 			});
 		}
 
-		this.characters = writable(characters); // Init character store
-		this.gameState = writable(TypingGame.GameState.NotStarted); // Init gameState store
-		this.cps = writable(0); // Init cps store
-		this.wpm = writable(0); // Init wpm store
-		this.accuracy = writable(100); // Init accuracy store
+		this.characters = atom(characters); // Init character store
+		this.gameState = atom(TypingGame.GameState.NotStarted); // Init gameState store
+		this.cps = atom(0); // Init cps store
+		this.wpm = atom(0); // Init wpm store
+		this.accuracy = atom(100); // Init accuracy store
 	}
 
 	/**
 	 * This exposes all internal writable stores as readable stores for use on the frontend.
 	 */
 	public getStores(): TypingGame.Stores {
-		// Note: Writable stores are objects with only a subscribe method
-		return {
-			characters: { subscribe: this.characters.subscribe },
-			cps: { subscribe: this.cps.subscribe },
-			wpm: { subscribe: this.wpm.subscribe },
-			accuracy: { subscribe: this.accuracy.subscribe },
-			gameState: { subscribe: this.gameState.subscribe },
-		}
+		// Omit the set function for each store:
+		const { set: a, ...characters } = this.characters;
+		const { set: b, ...cps } = this.cps;
+		const { set: c, ...wpm } = this.wpm;
+		const { set: d, ...accuracy } = this.accuracy;
+		const { set: e, ...gameState } = this.gameState;
+
+		return { characters, cps, wpm, accuracy, gameState }; // Return the readable stores
 	}
 
 	public handleKeyPress(key: Key) {
@@ -146,11 +146,11 @@ namespace TypingGame {
 	}
 
 	export interface Stores {
-		readonly characters: Readable<Character[]>
-		readonly cps: Readable<number>;
-		readonly wpm: Readable<number>;
-		readonly accuracy: Readable<number>;
-		readonly gameState: Readable<GameState>;
+		readonly characters: ReadableAtom<Character[]>;
+		readonly cps: ReadableAtom<number>;
+		readonly wpm: ReadableAtom<number>;
+		readonly accuracy: ReadableAtom<number>;
+		readonly gameState: ReadableAtom<GameState>;
 	}
 
 	export interface Options {
