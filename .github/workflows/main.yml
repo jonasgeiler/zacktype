@@ -1,4 +1,4 @@
-name: Build & Deploy
+name: Test, Build & Deploy
 on:
   push:
     branches:
@@ -7,7 +7,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
@@ -23,8 +22,11 @@ jobs:
       - name: Setup 🔧
         uses: pnpm/action-setup@v2.0.1
         with:
-          version: 6.0.2
+          version: 6.16.0
           run_install: true
+
+      - name: Test ✅
+        run: pnpm run test
 
       - name: Build 🏗
         run: pnpm run build
