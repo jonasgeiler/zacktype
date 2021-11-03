@@ -10,7 +10,7 @@ class TypingGame {
 	/** The whole text typed in by the user */
 	protected inputText: WritableAtom<string>;
 
-	/** Holds the info about all characters in the text */
+	/** Holds the current state of all characters in the text */
 	protected characterStates: WritableAtom<TypingGame.CharacterState[]>;
 
 	/** User's characters/second score */
@@ -215,8 +215,8 @@ class TypingGame {
 	 * Ends the game.
 	 */
 	protected gameOver() {
-		this.endTime.set(Date.now());
-		this.gameState.set(TypingGame.GameState.Ended);
+		this.endTime.set(Date.now()); // Store the time when user finished typing
+		this.gameState.set(TypingGame.GameState.Ended); // Change game state to "ended"
 	}
 
 	/**
@@ -235,8 +235,8 @@ class TypingGame {
 		// Set previous character state to none
 		characterStates[cursorPosition - 1] = TypingGame.CharacterState.None;
 
-		this.cursorPosition.set(cursorPosition - 1); // Move cursor backwards
 		this.characterStates.set(characterStates); // Update character states
+		this.cursorPosition.set(cursorPosition - 1); // Move cursor backwards
 		this.inputText.set(this.inputText.get().slice(0, -1)); // Remove last character from input text
 	}
 
@@ -257,26 +257,23 @@ class TypingGame {
 		if (character == this.cursorCharacter.get()) {
 			const correctedMistakePositions = this.correctedMistakePositions.get(); // Get current store value
 
-			// Check if a mistake was made earlier at current position
+			// Check if a mistake was made earlier at current position (and it wasn't already corrected)
 			if (mistakePositions.includes(cursorPosition) && !correctedMistakePositions.includes(cursorPosition)) {
 				correctedMistakePositions.push(cursorPosition); // Add cursor position to list of corrected mistakes
-
 				this.correctedMistakePositions.set(correctedMistakePositions); // Updated corrected mistake positions
 			}
 
 			characterStates[cursorPosition] = TypingGame.CharacterState.Correct; // Set current character state to correct
-
-			this.characterStates.set(characterStates); // Update character states
 		} else {
-			characterStates[cursorPosition] = TypingGame.CharacterState.Incorrect; // Set current character state to incorrect
 			mistakePositions.push(cursorPosition); // Add cursor position to mistake positions
-
-			this.characterStates.set(characterStates); // Update character states
 			this.mistakePositions.set(mistakePositions); // Update mistake positions
+
+			characterStates[cursorPosition] = TypingGame.CharacterState.Incorrect; // Set current character state to incorrect
 		}
 
-		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of typed characters
+		this.characterStates.set(characterStates); // Update character states with changes from above
 		this.cursorPosition.set(cursorPosition + 1); // Move cursor forward
+		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of total typed characters
 		this.inputText.set(this.inputText.get() + character); // Append character to input text
 
 		// Check if end of text was reached
@@ -329,24 +326,24 @@ class TypingGame {
 				}
 			}
 
-			let sentence = words.join(' ');
+			let sentence = words.join(' '); // Join all words together to form sentence
 
 			if (generateSpecialCharacters) {
 				const punctuationChance = this.randomInteger(0, 10);
 
-				if (punctuationChance <= 5) {
-					sentence += '.';
-				} else if (punctuationChance <= 7) {
-					sentence += '?';
-				} else {
-					sentence += '!';
+				if (punctuationChance <= 5) { // Dot is most common
+					sentence += '.'; // Add dot punctuation
+				} else if (punctuationChance <= 7) { // Question mark is second most common
+					sentence += '?'; // Add question mark punctuation
+				} else { // Otherwise exclamation mark
+					sentence += '!'; // Add exclamation mark punctuation
 				}
 			}
 
-			sentences.push(sentence);
-		} while (sentences.join(' ').length < approximateTextLength);
+			sentences.push(sentence); // Add to sentences
+		} while (sentences.join(' ').length < approximateTextLength); // Repeat until text length was reached
 
-		return sentences.join(' ');
+		return sentences.join(' '); // Join all sentences together and return result
 	}
 
 	protected randomInteger(min: number, max: number) {
