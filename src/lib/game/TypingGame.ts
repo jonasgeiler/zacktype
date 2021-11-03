@@ -214,25 +214,11 @@ class TypingGame {
 	}
 
 	/**
-	 * Handle key presses by the user.
-	 * @param key - The key property from an `KeyboardEvent`.
-	 */
-	public handleKey(key: Key) {
-		if (this.gameState.get() == TypingGame.GameState.Ended) return; // Don't handle keys when game already ended
-
-		if (key == Key.Backspace) {
-			this.removedCharacter();
-		} else {
-			if (key.length != 1) return;
-
-			this.typedCharacter(key);
-		}
-	}
-
-	/**
 	 * Called when the user removed a character with backspace.
 	 */
-	protected removedCharacter() {
+	public backspace() {
+		if (this.gameState.get() == TypingGame.GameState.Ended) return; // Don't handle keys when game already ended
+
 		// Get current store values
 		const cursorPosition = this.cursorPosition.get();
 		const characterStates = this.characterStates.get();
@@ -251,7 +237,8 @@ class TypingGame {
 	 * Called when the user typed any character.
 	 * @param character - The character the user typed.
 	 */
-	protected typedCharacter(character: string) {
+	public insert(character: string) {
+		if (this.gameState.get() == TypingGame.GameState.Ended) return; // Don't handle keys when game already ended
 		if (this.gameState.get() == TypingGame.GameState.NotStarted) this.startGame(); // Start game when not yet started
 
 		// Get current store values

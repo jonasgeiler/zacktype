@@ -1,7 +1,8 @@
 <script lang="ts">
 	import TypingGame from '$lib/game/TypingGame';
+	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import type { Key } from 'ts-key-enum';
+	import { Key } from 'ts-key-enum';
 
 	const typingGame = new TypingGame();
 
@@ -18,26 +19,45 @@
 
 	let inputField: HTMLInputElement;
 
-	function handleInput(event: KeyboardEvent) {
-		typingGame.handleKey(event.key as Key);
-		inputField.value = '';
+	function handleKeyDown(event: KeyboardEvent) {
+		switch (event.key) {
+			case Key.Backspace:
+			case Key.Process:
+				typingGame.backspace();
+				break;
+
+			default:
+				if (event.key.length != 1) return;
+				typingGame.insert(event.key);
+		}
 	}
 
 	function focusInputField() {
+		if (!inputField || gameState.get() == TypingGame.GameState.Ended) return;
 		inputField.focus();
 	}
 
-	function restart() {
+	function restartGame() {
 		typingGame.reset();
-		focusInputField();
 	}
+
+	onMount(() => {
+		window.addEventListener('click', focusInputField);
+		window.addEventListener('keydown', handleKeyDown);
+
+		() => {
+			window.removeEventListener('click', focusInputField);
+			window.removeEventListener('keydown', handleKeyDown);
+		}
+	});
 </script>
 
-<input bind:this={inputField} on:keydown={handleInput}
-       id="inputField" type="text" autofocus autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+{#if $gameState !== TypingGame.GameState.Ended}
+	<input bind:this={inputField} id="inputField" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+{/if}
 
 <div id="game">
-	<div id="text" on:click={focusInputField}>
+	<div id="text">
 		{#each $text as character, index (character + index)}
 			<span class:cursor={$cursorPosition === index}
 			      class:correct={$characterStates[index] === TypingGame.CharacterState.Correct}
@@ -69,9 +89,9 @@
 				</div>
 			</div>
 
-			<a on:click={restart} id="restart">
+			<a on:click={restartGame} id="restart">
 				<svg xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24" height="30" width="30">
-					<path d="M7 9H0V2h1v5.2C2.853 2.963 7.083 0 12 0c6.623 0 12 5.377 12 12s-5.377 12-12 12C5.714 24 .55 19.156.041 13h1.004C1.551 18.603 6.266 23 12 23c6.071 0 11-4.929 11-11S18.071 1 12 1C7.34 1 3.353 3.904 1.751 8H7v1z"/>
+					<path d="M7 9H0V2h1v5.2C2.853 2.963 7.083 0 12 0c6.623 0 12 5.377 12 12s-5.377 12-12 12C5.714 24 .55 19.156.041 13h1.004C1.551 18.603 6.266 23 12 23c6.071 0 11-4.929 11-11S18.071 1 12 1C7.34 1 3.353 3.904 1.751 8H7v1z" />
 				</svg>
 			</a>
 		</div>
@@ -142,11 +162,11 @@
 	}
 
 	#text {
-		font-size: 24px;
+		font-size:   24px;
 		white-space: pre-wrap;
 
 		user-select: none;
-		cursor: text;
+		cursor:      text;
 	}
 
 	#text .cursor {
@@ -205,11 +225,11 @@
 	}
 
 	#restart {
-		margin-top: 2rem;
-		font-size:  16px;
-		fill:      var(--secondary-text-color);
+		margin-top:  2rem;
+		font-size:   16px;
+		fill:        var(--secondary-text-color);
 
-		cursor: pointer;
+		cursor:      pointer;
 		user-select: none;
 	}
 </style>
