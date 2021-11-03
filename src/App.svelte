@@ -20,9 +20,10 @@
 	let inputField: HTMLInputElement;
 
 	function handleKeyDown(event: KeyboardEvent) {
+		event.preventDefault();
+
 		switch (event.key) {
 			case Key.Backspace:
-			case Key.Process:
 				typingGame.backspace();
 				break;
 
@@ -30,6 +31,7 @@
 				if (event.key.length != 1) return;
 				typingGame.insert(event.key);
 		}
+
 	}
 
 	function focusInputField() {
@@ -48,7 +50,7 @@
 		() => {
 			window.removeEventListener('click', focusInputField);
 			window.removeEventListener('keydown', handleKeyDown);
-		}
+		};
 	});
 </script>
 
@@ -111,15 +113,12 @@
 	body {
 		height:                  100%;
 		width:                   100%;
-
 		padding:                 0;
 		margin:                  0;
-
 		font-family:             var(--font-family);
 		font-weight:             400;
 		-webkit-font-smoothing:  antialiased;
 		-moz-osx-font-smoothing: grayscale;
-
 		background-color:        var(--background-color);
 		color:                   var(--primary-text-color);
 	}
@@ -129,12 +128,10 @@
 	}
 
 	#app {
-		height:             100vh;
-
+		min-height:         100vh;
 		display:            flex;
 		justify-content:    center;
 		align-items:        center;
-
 		overflow-y:         auto;
 		scrollbar-width:    none;
 		-ms-overflow-style: none;
@@ -147,14 +144,9 @@
 	}
 
 	#game {
-		max-height:      600px;
-		height:          100%;
 		max-width:       600px;
 		width:           100%;
-
-		margin-left:     1rem;
-		margin-right:    1rem;
-
+		margin:          2rem 1rem;
 		display:         flex;
 		flex-direction:  column;
 		justify-content: center;
@@ -164,7 +156,6 @@
 	#text {
 		font-size:   24px;
 		white-space: pre-wrap;
-
 		user-select: none;
 		cursor:      text;
 	}
@@ -185,7 +176,7 @@
 
 	#gameOver {
 		width:           100%;
-
+		margin-top:      2rem;
 		display:         flex;
 		flex-direction:  column;
 		justify-content: center;
@@ -194,8 +185,6 @@
 
 	#result {
 		width:           100%;
-		margin-top:      2rem;
-
 		display:         flex;
 		flex-wrap:       wrap;
 		justify-content: space-around;
@@ -207,12 +196,12 @@
 		flex-direction:  column;
 		justify-content: center;
 		align-items:     center;
-
-		margin-bottom:   5px;
+		margin-bottom:   10px;
 	}
 
-	.result-item:not(:last-child) {
-		margin-right: 15px;
+	.result-item {
+		margin-left:  20px;
+		margin-right: 20px;
 	}
 
 	.result-value {
@@ -228,7 +217,6 @@
 		margin-top:  2rem;
 		font-size:   16px;
 		fill:        var(--secondary-text-color);
-
 		cursor:      pointer;
 		user-select: none;
 	}
