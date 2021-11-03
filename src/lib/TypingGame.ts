@@ -32,7 +32,7 @@ class TypingGame {
 	protected correctedMistakePositions: WritableAtom<number[]>;
 
 	/** Total amount of characters typed in by user */
-	protected typedCharacters: WritableAtom<number>;
+	protected totalTypedCharacters: WritableAtom<number>;
 
 	/** Current state of the game */
 	protected gameState: WritableAtom<TypingGame.GameState>;
@@ -72,7 +72,7 @@ class TypingGame {
 		this.gameState = atom(TypingGame.GameState.NotStarted);
 		this.mistakePositions = atom([]);
 		this.correctedMistakePositions = atom([]);
-		this.typedCharacters = atom(0);
+		this.totalTypedCharacters = atom(0);
 		this.startTime = atom(null);
 		this.endTime = atom(null);
 		this.cursorPosition = atom(0);
@@ -91,13 +91,13 @@ class TypingGame {
 
 		// Init wpm store
 		this.wpm = computed(
-			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakePositions ],
-			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
+			[ this.totalTypedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakePositions ],
+			($totalTypedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
 				if ($startTime == null || $endTime == null) return 0;
 
 				// https://www.speedtypingonline.com/typing-equations
 
-				const typedWords = $typedCharacters / 5; // We use 5 here, because that's the average word length in the English language and therefore commonly used to calculate WPM
+				const typedWords = $totalTypedCharacters / 5; // We use 5 here, because that's the average word length in the English language and therefore commonly used to calculate WPM
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
@@ -112,8 +112,8 @@ class TypingGame {
 
 		// Init cpm store
 		this.cps = computed(
-			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakePositions ],
-			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
+			[ this.totalTypedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakePositions ],
+			($totalTypedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
 				if ($startTime == null || $endTime == null) return 0;
 
 				// https://www.speedtypingonline.com/typing-equations
@@ -121,7 +121,7 @@ class TypingGame {
 
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
-				const grossCPS = $typedCharacters / elapsedSeconds; // Calculate gross CPS
+				const grossCPS = $totalTypedCharacters / elapsedSeconds; // Calculate gross CPS
 				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes.length; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
 				const netCPS = grossCPS - errorRate; // Calculate net CPS
@@ -132,13 +132,13 @@ class TypingGame {
 
 		// Init accuracy store
 		this.accuracy = computed(
-			[ this.mistakePositions, this.typedCharacters ],
-			($mistakePositions, $typedCharacters) => {
-				if ($typedCharacters == 0) return 0;
+			[ this.mistakePositions, this.totalTypedCharacters ],
+			($mistakePositions, $totalTypedCharacters) => {
+				if ($totalTypedCharacters == 0) return 0;
 
-				const charactersTypedWithoutMistakes = ($typedCharacters - $mistakePositions.length);
+				const charactersTypedWithoutMistakes = ($totalTypedCharacters - $mistakePositions.length);
 
-				return Math.round((charactersTypedWithoutMistakes / $typedCharacters) * 100);
+				return Math.round((charactersTypedWithoutMistakes / $totalTypedCharacters) * 100);
 			},
 		);
 	}
@@ -169,7 +169,7 @@ class TypingGame {
 		this.gameState.set(TypingGame.GameState.NotStarted);
 		this.mistakePositions.set([]);
 		this.correctedMistakePositions.set([]);
-		this.typedCharacters.set(0);
+		this.totalTypedCharacters.set(0);
 		this.startTime.set(null);
 		this.endTime.set(null);
 		this.cursorPosition.set(0);
@@ -189,7 +189,7 @@ class TypingGame {
 		const { set: g, ...mistakes } = this.mistakes as WritableAtom<number>;
 		const { set: h, ...mistakePositions } = this.mistakePositions;
 		const { set: i, ...correctedMistakePositions } = this.correctedMistakePositions;
-		const { set: j, ...typedCharacters } = this.typedCharacters;
+		const { set: j, ...totalTypedCharacters } = this.totalTypedCharacters;
 		const { set: k, ...gameState } = this.gameState;
 		const { set: l, ...startTime } = this.startTime;
 		const { set: m, ...endTime } = this.endTime;
@@ -199,7 +199,7 @@ class TypingGame {
 		// Return the readable stores
 		return {
 			text, inputText, characterStates, wpm, cps, accuracy, mistakes, mistakePositions, correctedMistakePositions,
-			typedCharacters, gameState, startTime, endTime, cursorPosition, cursorCharacter
+			totalTypedCharacters, gameState, startTime, endTime, cursorPosition, cursorCharacter
 		};
 	}
 
@@ -273,7 +273,7 @@ class TypingGame {
 
 		this.characterStates.set(characterStates); // Update character states with changes from above
 		this.cursorPosition.set(cursorPosition + 1); // Move cursor forward
-		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of total typed characters
+		this.totalTypedCharacters.set(this.totalTypedCharacters.get() + 1); // Increase amount of total typed characters
 		this.inputText.set(this.inputText.get() + character); // Append character to input text
 
 		// Check if end of text was reached
@@ -376,7 +376,7 @@ namespace TypingGame {
 		readonly mistakes: ReadableAtom<number>;
 		readonly mistakePositions: ReadableAtom<number[]>;
 		readonly correctedMistakePositions: ReadableAtom<number[]>;
-		readonly typedCharacters: ReadableAtom<number>;
+		readonly totalTypedCharacters: ReadableAtom<number>;
 		readonly gameState: ReadableAtom<GameState>;
 		readonly startTime: ReadableAtom<number | null>;
 		readonly endTime: ReadableAtom<number | null>;

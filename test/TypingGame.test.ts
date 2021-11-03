@@ -181,38 +181,38 @@ describe('TypingGame', () => {
 		expect(correctedMistakePositions.get()).toEqual(expect.arrayContaining([ 1, 3 ]));
 	});
 
-	test('typedCharacters contains the amount of typed characters', () => {
+	test('totalTypedCharacters contains the amount of typed characters', () => {
 		const text = 'Hello World!';
 		const tg = new TypingGame({
 			text,
 		});
-		const { typedCharacters } = tg.getStores();
+		const { totalTypedCharacters } = tg.getStores();
 
-		testReadableStore<number>(typedCharacters, 0);
+		testReadableStore<number>(totalTypedCharacters, 0);
 
-		expect(typedCharacters.get()).toEqual(0);
+		expect(totalTypedCharacters.get()).toEqual(0);
 		tg.insert('H');
-		expect(typedCharacters.get()).toEqual(1);
+		expect(totalTypedCharacters.get()).toEqual(1);
 		tg.insert('e');
-		expect(typedCharacters.get()).toEqual(2);
+		expect(totalTypedCharacters.get()).toEqual(2);
 		tg.insert('f'); // Wrong character
-		expect(typedCharacters.get()).toEqual(3); // Wrong character should also increase typedCharacters
+		expect(totalTypedCharacters.get()).toEqual(3); // Wrong character should also increase totalTypedCharacters
 		tg.insert(' '); // Space
-		expect(typedCharacters.get()).toEqual(4); // Space should also increase typeCharacters
+		expect(totalTypedCharacters.get()).toEqual(4); // Space should also increase typeCharacters
 		tg.backspace(); // Remove space
 		tg.backspace(); // Remove wrong character
-		expect(typedCharacters.get()).toEqual(4); // Removing characters shouldn't affect typedCharacters
+		expect(totalTypedCharacters.get()).toEqual(4); // Removing characters shouldn't affect totalTypedCharacters
 		tg.insert('l');
 		tg.insert('l');
-		expect(typedCharacters.get()).toEqual(6);
+		expect(totalTypedCharacters.get()).toEqual(6);
 		for (let char of text.substr(4)) {
 			tg.insert(char); // Insert the rest of the characters
 		}
-		expect(typedCharacters.get()).toEqual(14); // At the end it should be 14 characters
+		expect(totalTypedCharacters.get()).toEqual(14); // At the end it should be 14 characters
 		tg.insert('s'); // Insert character, even though we're finished
-		expect(typedCharacters.get()).toEqual(14); // Inserting character after game was finished shouldn't affect typedCharacters
+		expect(totalTypedCharacters.get()).toEqual(14); // Inserting character after game was finished shouldn't affect totalTypedCharacters
 		tg.backspace(); // Remove last character
-		expect(typedCharacters.get()).toEqual(14); // Removing the last character shouldn't affect typedCharacters
+		expect(totalTypedCharacters.get()).toEqual(14); // Removing the last character shouldn't affect totalTypedCharacters
 	});
 
 	test('startTime contains the time when user started typing', async () => {
