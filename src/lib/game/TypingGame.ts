@@ -183,22 +183,24 @@ class TypingGame {
 		const { set: a, ...text } = this.text;
 		const { set: b, ...inputText } = this.inputText;
 		const { set: c, ...characterStates } = this.characterStates;
-		const { set: d, ...mistakePositions } = this.mistakePositions;
-		const { set: e, ...correctedMistakes } = this.correctedMistakes;
-		const { set: f, ...typedCharacters } = this.typedCharacters;
-		const { set: g, ...gameState } = this.gameState;
-		const { set: h, ...startTime } = this.startTime;
-		const { set: j, ...endTime } = this.endTime;
-		const { set: k, ...cursorPosition } = this.cursorPosition;
+		const { set: d, ...wpm } = this.wpm as WritableAtom<number>; // The store still has a `set` method, even if the type is `ReadableAtom`. It's a little bug.
+		const { set: e, ...cps } = this.cps as WritableAtom<number>; // Same here and some below
+		const { set: f, ...accuracy } = this.accuracy as WritableAtom<number>;
+		const { set: g, ...mistakes } = this.mistakes as WritableAtom<number>;
+		const { set: h, ...mistakePositions } = this.mistakePositions;
+		const { set: i, ...correctedMistakes } = this.correctedMistakes;
+		const { set: j, ...typedCharacters } = this.typedCharacters;
+		const { set: k, ...gameState } = this.gameState;
+		const { set: l, ...startTime } = this.startTime;
+		const { set: m, ...endTime } = this.endTime;
+		const { set: n, ...cursorPosition } = this.cursorPosition;
+		const { set: o, ...cursorCharacter } = this.cursorCharacter as WritableAtom<string>;
 
 		// Return the readable stores
 		return {
-			text, inputText, characterStates, mistakePositions, correctedMistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
-			wpm:             this.wpm,
-			cps:             this.cps,
-			accuracy:        this.accuracy,
-			mistakes:        this.mistakes,
-			cursorCharacter: this.cursorCharacter,
+			text, inputText, characterStates, wpm, cps, accuracy, mistakes, mistakePositions, correctedMistakes,
+			typedCharacters, gameState, startTime, endTime, cursorPosition, cursorCharacter
+
 		};
 	}
 

@@ -75,6 +75,8 @@ describe('generating text', () => {
 
 const testReadableStore = (store: Readable<any>) => {
 	expect(store).toHaveProperty('subscribe');
+	expect(store).not.toHaveProperty('set');
+	expect(store).not.toHaveProperty('update');
 
 	const subscriber = jest.fn();
 	store.subscribe(subscriber);
