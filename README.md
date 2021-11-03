@@ -20,7 +20,7 @@
   - [X] Website
 - [X] Calculate and display accuracy
 - [X] Calculate and display WPM
-- [ ] More unit tests
+- [X] More unit tests
 - [X] Make PWA-ready
 - [X] Maybe make a light and dark theme?
 - [ ] Maybe add some settings?
