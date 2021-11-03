@@ -1,5 +1,5 @@
 <script lang="ts">
-	import TypingGame from '$lib/game/TypingGame';
+	import TypingGame from '$lib/TypingGame';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 

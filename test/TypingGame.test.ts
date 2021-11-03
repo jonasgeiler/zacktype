@@ -1,4 +1,4 @@
-import TypingGame from '$lib/game/TypingGame';
+import TypingGame from '$lib/TypingGame';
 import type { ReadableAtom } from 'nanostores';
 
 function testReadableStore<T extends any>(store: ReadableAtom<T>, expectValue?: T) {
