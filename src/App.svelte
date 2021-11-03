@@ -15,6 +15,7 @@
 		cps,
 		accuracy,
 		mistakes,
+		correctedMistakePositions,
 	} = typingGame.getStores();
 
 	let inputField: HTMLInputElement;
@@ -85,7 +86,8 @@
 		{#each $text as character, index (character + index)}
 			<span class:cursor={$cursorPosition === index && cursorActive}
 			      class:correct={$characterStates[index] === TypingGame.CharacterState.Correct}
-			      class:incorrect={$characterStates[index] === TypingGame.CharacterState.Incorrect}>{character}</span>
+			      class:incorrect={$characterStates[index] === TypingGame.CharacterState.Incorrect}
+			      class:corrected={$correctedMistakePositions.includes(index)}>{character}</span>
 		{/each}
 	</div>
 
@@ -130,6 +132,7 @@
 		--secondary-text-color:      #7f7f7f;
 		--correct-character-color:   #03a9f4;
 		--incorrect-character-color: #f44336;
+		--corrected-character-color: #f4433633;
 	}
 
 	@media (prefers-color-scheme: light) {
@@ -139,6 +142,7 @@
 			--secondary-text-color:      #707070;
 			--correct-character-color:   #2196f3;
 			--incorrect-character-color: #f44336;
+			--corrected-character-color: #f4433633;
 		}
 	}
 
@@ -204,6 +208,10 @@
 	#text .incorrect {
 		background-color: var(--incorrect-character-color);
 		color:            var(--primary-text-color);
+	}
+
+	#text .corrected {
+		background-color: var(--corrected-character-color);
 	}
 
 	#game-over {
