@@ -28,8 +28,8 @@ class TypingGame {
 	/** Positions of mistakes that user made while typing */
 	protected mistakePositions: WritableAtom<number[]>;
 
-	/** Amount of mistakes that the user made, but then corrected */
-	protected correctedMistakes: WritableAtom<number>;
+	/** Positions of mistakes that user corrected */
+	protected correctedMistakePositions: WritableAtom<number[]>;
 
 	/** Total amount of characters typed in by user */
 	protected typedCharacters: WritableAtom<number>;
@@ -71,7 +71,7 @@ class TypingGame {
 		this.characterStates = atom(characterStates);
 		this.gameState = atom(TypingGame.GameState.NotStarted);
 		this.mistakePositions = atom([]);
-		this.correctedMistakes = atom(0);
+		this.correctedMistakePositions = atom([]);
 		this.typedCharacters = atom(0);
 		this.startTime = atom(null);
 		this.endTime = atom(null);
@@ -91,7 +91,7 @@ class TypingGame {
 
 		// Init wpm store
 		this.wpm = computed(
-			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakes ],
+			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakePositions ],
 			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
 				if ($startTime == null || $endTime == null) return 0;
 
@@ -102,7 +102,7 @@ class TypingGame {
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
 				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
-				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes.length; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
 				const netWPM = grossWPM - errorRate; // Calculate net WPM
 
@@ -112,7 +112,7 @@ class TypingGame {
 
 		// Init cpm store
 		this.cps = computed(
-			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakes ],
+			[ this.typedCharacters, this.startTime, this.endTime, this.mistakePositions, this.correctedMistakePositions ],
 			($typedCharacters, $startTime, $endTime, $mistakePositions, $correctedMistakes) => {
 				if ($startTime == null || $endTime == null) return 0;
 
@@ -122,7 +122,7 @@ class TypingGame {
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const grossCPS = $typedCharacters / elapsedSeconds; // Calculate gross CPS
-				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes; // Calculate amount of uncorrected mistakes
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakes.length; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
 				const netCPS = grossCPS - errorRate; // Calculate net CPS
 
@@ -168,7 +168,7 @@ class TypingGame {
 		this.characterStates.set(characterStates);
 		this.gameState.set(TypingGame.GameState.NotStarted);
 		this.mistakePositions.set([]);
-		this.correctedMistakes.set(0);
+		this.correctedMistakePositions.set([]);
 		this.typedCharacters.set(0);
 		this.startTime.set(null);
 		this.endTime.set(null);
@@ -188,7 +188,7 @@ class TypingGame {
 		const { set: f, ...accuracy } = this.accuracy as WritableAtom<number>;
 		const { set: g, ...mistakes } = this.mistakes as WritableAtom<number>;
 		const { set: h, ...mistakePositions } = this.mistakePositions;
-		const { set: i, ...correctedMistakes } = this.correctedMistakes;
+		const { set: i, ...correctedMistakePositions } = this.correctedMistakePositions;
 		const { set: j, ...typedCharacters } = this.typedCharacters;
 		const { set: k, ...gameState } = this.gameState;
 		const { set: l, ...startTime } = this.startTime;
@@ -198,9 +198,8 @@ class TypingGame {
 
 		// Return the readable stores
 		return {
-			text, inputText, characterStates, wpm, cps, accuracy, mistakes, mistakePositions, correctedMistakes,
+			text, inputText, characterStates, wpm, cps, accuracy, mistakes, mistakePositions, correctedMistakePositions,
 			typedCharacters, gameState, startTime, endTime, cursorPosition, cursorCharacter
-
 		};
 	}
 
@@ -256,9 +255,13 @@ class TypingGame {
 
 		// Check if character is correct
 		if (character == this.cursorCharacter.get()) {
+			const correctedMistakePositions = this.correctedMistakePositions.get(); // Get current store value
+
 			// Check if a mistake was made earlier at current position
-			if (mistakePositions.includes(cursorPosition)) {
-				this.correctedMistakes.set(this.correctedMistakes.get() + 1); // Increase amount of corrected mistakes
+			if (mistakePositions.includes(cursorPosition) && !correctedMistakePositions.includes(cursorPosition)) {
+				correctedMistakePositions.push(cursorPosition); // Add cursor position to list of corrected mistakes
+
+				this.correctedMistakePositions.set(correctedMistakePositions); // Updated corrected mistake positions
 			}
 
 			characterStates[cursorPosition] = TypingGame.CharacterState.Correct; // Set current character state to correct
@@ -375,7 +378,7 @@ namespace TypingGame {
 		readonly accuracy: ReadableAtom<number>;
 		readonly mistakes: ReadableAtom<number>;
 		readonly mistakePositions: ReadableAtom<number[]>;
-		readonly correctedMistakes: ReadableAtom<number>;
+		readonly correctedMistakePositions: ReadableAtom<number[]>;
 		readonly typedCharacters: ReadableAtom<number>;
 		readonly gameState: ReadableAtom<GameState>;
 		readonly startTime: ReadableAtom<number | null>;
