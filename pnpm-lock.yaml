@@ -16,7 +16,6 @@ specifiers:
   svelte-jester: ^2.1.5
   svelte-preprocess: ^4.7.2
   ts-jest: ^27.0.7
-  ts-key-enum: ^2.0.8
   tslib: ^2.2.0
   typescript: ^4.3.2
   vite: ^2.6.4
@@ -24,7 +23,6 @@ specifiers:
 
 dependencies:
   nanostores: 0.5.4
-  ts-key-enum: 2.0.8
 
 devDependencies:
   '@babel/core': 7.16.0
@@ -4242,10 +4240,6 @@ packages:
       typescript: 4.4.4
       yargs-parser: 20.2.9
     dev: true
-
-  /ts-key-enum/2.0.8:
-    resolution: {integrity: sha512-ccRzCVr98faP5pKYpX0IlrPvf2VcepEFSH115CWti0eM1anh774ndXf0RlBOFecTuM103gMwaHSo0tDPlQnyNQ==}
-    dev: false
 
   /tsconfig-paths/3.11.0:
     resolution: {integrity: sha512-7ecdYDnIdmv639mmDwslG6KQg1Z9STTz1j7Gcz0xa+nshh/gKDAHcPxRbWOsA3SPp0tXP2leTcY9Kw+NAkfZzA==}

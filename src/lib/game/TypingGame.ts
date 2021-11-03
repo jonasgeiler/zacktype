@@ -1,12 +1,14 @@
 import type { ReadableAtom, WritableAtom } from 'nanostores';
 import { atom, computed } from 'nanostores';
-import { Key } from 'ts-key-enum';
 import dictionary from './dictionary';
 
 class TypingGame {
 
 	/** The text used in the game */
 	protected text: WritableAtom<string>;
+
+	/** The whole text typed in by the user */
+	protected inputText: WritableAtom<string>;
 
 	/** Holds the info about all characters in the text */
 	protected characterStates: WritableAtom<TypingGame.CharacterState[]>;
@@ -65,6 +67,7 @@ class TypingGame {
 		}
 
 		// Init other stores
+		this.inputText = atom('');
 		this.characterStates = atom(characterStates);
 		this.gameState = atom(TypingGame.GameState.NotStarted);
 		this.mistakePositions = atom([]);
@@ -161,6 +164,7 @@ class TypingGame {
 		}
 
 		// Reset other stores
+		this.inputText.set('');
 		this.characterStates.set(characterStates);
 		this.gameState.set(TypingGame.GameState.NotStarted);
 		this.mistakePositions.set([]);
@@ -177,18 +181,19 @@ class TypingGame {
 	public getStores(): TypingGame.Stores {
 		// Omit the set function for each store:
 		const { set: a, ...text } = this.text;
-		const { set: b, ...characterStates } = this.characterStates;
-		const { set: c, ...mistakePositions } = this.mistakePositions;
-		const { set: d, ...correctedMistakes } = this.correctedMistakes;
+		const { set: b, ...inputText } = this.inputText;
+		const { set: c, ...characterStates } = this.characterStates;
+		const { set: d, ...mistakePositions } = this.mistakePositions;
+		const { set: e, ...correctedMistakes } = this.correctedMistakes;
 		const { set: f, ...typedCharacters } = this.typedCharacters;
 		const { set: g, ...gameState } = this.gameState;
 		const { set: h, ...startTime } = this.startTime;
-		const { set: i, ...endTime } = this.endTime;
-		const { set: j, ...cursorPosition } = this.cursorPosition;
+		const { set: j, ...endTime } = this.endTime;
+		const { set: k, ...cursorPosition } = this.cursorPosition;
 
 		// Return the readable stores
 		return {
-			text, characterStates, mistakePositions, correctedMistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
+			text, inputText, characterStates, mistakePositions, correctedMistakes, typedCharacters, gameState, startTime, endTime, cursorPosition,
 			wpm:             this.wpm,
 			cps:             this.cps,
 			accuracy:        this.accuracy,
@@ -231,6 +236,7 @@ class TypingGame {
 
 		this.cursorPosition.set(cursorPosition - 1); // Move cursor backwards
 		this.characterStates.set(characterStates); // Update character states
+		this.inputText.set(this.inputText.get().slice(0, -1)); // Remove last character from input text
 	}
 
 	/**
@@ -266,6 +272,7 @@ class TypingGame {
 
 		this.typedCharacters.set(this.typedCharacters.get() + 1); // Increase amount of typed characters
 		this.cursorPosition.set(cursorPosition + 1); // Move cursor forward
+		this.inputText.set(this.inputText.get() + character); // Append character to input text
 
 		// Check if end of text was reached
 		if (cursorPosition + 1 == this.text.get().length) {
@@ -359,6 +366,7 @@ namespace TypingGame {
 
 	export interface Stores {
 		readonly text: ReadableAtom<string>;
+		readonly inputText: ReadableAtom<string>;
 		readonly characterStates: ReadableAtom<CharacterState[]>;
 		readonly cps: ReadableAtom<number>;
 		readonly wpm: ReadableAtom<number>;

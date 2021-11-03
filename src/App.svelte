@@ -2,12 +2,12 @@
 	import TypingGame from '$lib/game/TypingGame';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import { Key } from 'ts-key-enum';
 
 	const typingGame = new TypingGame();
 
 	const {
 		text,
+		inputText,
 		characterStates,
 		cursorPosition,
 		gameState,
@@ -19,19 +19,19 @@
 
 	let inputField: HTMLInputElement;
 
-	function handleKeyDown(event: KeyboardEvent) {
-		event.preventDefault();
+	function handleInput(event: InputEvent) {
+		switch (event.inputType) {
+			case 'insertText':
+				typingGame.insert(event.data);
+				break;
 
-		switch (event.key) {
-			case Key.Backspace:
+			case 'deleteContentBackward':
 				typingGame.backspace();
 				break;
 
 			default:
-				if (event.key.length != 1) return;
-				typingGame.insert(event.key);
+				inputField.value = inputText.get();
 		}
-
 	}
 
 	function focusInputField() {
@@ -45,17 +45,12 @@
 
 	onMount(() => {
 		window.addEventListener('click', focusInputField);
-		window.addEventListener('keydown', handleKeyDown);
-
-		() => {
-			window.removeEventListener('click', focusInputField);
-			window.removeEventListener('keydown', handleKeyDown);
-		};
+		() => window.removeEventListener('click', focusInputField);
 	});
 </script>
 
 {#if $gameState !== TypingGame.GameState.Ended}
-	<input bind:this={inputField} id="inputField" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+	<input bind:this={inputField} value={$inputText} on:input={handleInput} id="inputField" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 {/if}
 
 <div id="game">
