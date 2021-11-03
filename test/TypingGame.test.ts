@@ -1,78 +1,6 @@
 import TypingGame from '$lib/game/TypingGame';
 import type { ReadableAtom } from 'nanostores';
 
-describe('providing text', () => {
-
-	test('it uses the provided text', () => {
-		const tg = new TypingGame({
-			text: 'Hello World!',
-		});
-
-		const { text } = tg.getStores();
-
-		expect(text.get()).toEqual('Hello World!');
-	});
-
-});
-
-describe('generating text', () => {
-
-	test('it generates random text when no text was provided', () => {
-		const tg = new TypingGame({
-			text:                      null,
-			approximateTextLength:     1000,
-			generateSpecialCharacters: true,
-			generateUppercaseLetters:  true,
-		});
-
-		const { text } = tg.getStores();
-
-		expect(text.get()).toEqual(expect.any(String));
-		expect(text.get().length).toBeGreaterThan(10);
-		expect(text.get()).toMatch(/^[a-zA-Z.,?!\- ]+$/);
-	});
-
-	test('it doesn\'t have special characters in the generated text when disabling the generateSpecialCharacters option', () => {
-		const tg = new TypingGame({
-			text:                      null,
-			approximateTextLength:     1000,
-			generateSpecialCharacters: false,
-			generateUppercaseLetters:  true,
-		});
-
-		const { text } = tg.getStores();
-
-		expect(text.get()).toMatch(/^[^.,?!\-]+$/);
-	});
-
-	test('it doesn\'t have uppercase letters in the generated text when disabling the generateUppercaseLetters option', () => {
-		const tg = new TypingGame({
-			text:                      null,
-			approximateTextLength:     1000,
-			generateSpecialCharacters: true,
-			generateUppercaseLetters:  false,
-		});
-
-		const { text } = tg.getStores();
-
-		expect(text.get()).toMatch(/^[^A-Z]+$/);
-	});
-
-	test('it doesn\'t have uppercase letters or special characters in the generated text when disabling both the generateUppercaseLetters and the generateSpecialCharacters options', () => {
-		const tg = new TypingGame({
-			text:                      null,
-			approximateTextLength:     1000,
-			generateSpecialCharacters: false,
-			generateUppercaseLetters:  false,
-		});
-
-		const { text } = tg.getStores();
-
-		expect(text.get()).toMatch(/^[^A-Z.,?!\-]+$/);
-	});
-
-});
-
 function testReadableStore<T extends any>(store: ReadableAtom<T>, expectValue?: T) {
 	expect(store).toHaveProperty('subscribe');
 	expect(store).toHaveProperty('get');
@@ -427,6 +355,60 @@ describe('TypingGame', () => {
 		const { accuracy } = tg.getStores();
 
 		testReadableStore<number>(accuracy, 0);
+	});
+
+	test('it generates random text when no text was provided', () => {
+		const tg = new TypingGame({
+			text:                      null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: true,
+			generateUppercaseLetters:  true,
+		});
+
+		const { text } = tg.getStores();
+
+		expect(text.get()).toEqual(expect.any(String));
+		expect(text.get().length).toBeGreaterThan(10);
+		expect(text.get()).toMatch(/^[a-zA-Z.,?!\- ]+$/);
+	});
+
+	test('it doesn\'t have special characters in the generated text when disabling the generateSpecialCharacters option', () => {
+		const tg = new TypingGame({
+			text:                      null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: false,
+			generateUppercaseLetters:  true,
+		});
+
+		const { text } = tg.getStores();
+
+		expect(text.get()).toMatch(/^[^.,?!\-]+$/);
+	});
+
+	test('it doesn\'t have uppercase letters in the generated text when disabling the generateUppercaseLetters option', () => {
+		const tg = new TypingGame({
+			text:                      null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: true,
+			generateUppercaseLetters:  false,
+		});
+
+		const { text } = tg.getStores();
+
+		expect(text.get()).toMatch(/^[^A-Z]+$/);
+	});
+
+	test('it doesn\'t have uppercase letters or special characters in the generated text when disabling both the generateUppercaseLetters and the generateSpecialCharacters options', () => {
+		const tg = new TypingGame({
+			text:                      null,
+			approximateTextLength:     1000,
+			generateSpecialCharacters: false,
+			generateUppercaseLetters:  false,
+		});
+
+		const { text } = tg.getStores();
+
+		expect(text.get()).toMatch(/^[^A-Z.,?!\-]+$/);
 	});
 
 });
