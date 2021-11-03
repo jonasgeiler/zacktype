@@ -50,7 +50,10 @@
 </script>
 
 {#if $gameState !== TypingGame.GameState.Ended}
-	<input bind:this={inputField} value={$inputText} on:input={handleInput} id="inputField" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+	<div id="hidden-form">
+		<label for="input-field">Type here</label>
+		<input bind:this={inputField} value={$inputText} on:input={handleInput} id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+	</div>
 {/if}
 
 <div id="game">
@@ -63,7 +66,7 @@
 	</div>
 
 	{#if $gameState === TypingGame.GameState.Ended}
-		<div id="gameOver" transition:slide>
+		<div id="game-over" transition:slide>
 			<div id="result">
 				<div class="result-item">
 					<span class="result-value">{$cps}</span>
@@ -132,7 +135,7 @@
 		-ms-overflow-style: none;
 	}
 
-	#inputField {
+	#hidden-form {
 		position: fixed;
 		top:      -100vh;
 		left:     -100vw;
@@ -169,7 +172,7 @@
 		color:            var(--primary-text-color);
 	}
 
-	#gameOver {
+	#game-over {
 		width:           100%;
 		margin-top:      2rem;
 		display:         flex;
