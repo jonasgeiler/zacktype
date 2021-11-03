@@ -19,14 +19,31 @@
 
 	let inputField: HTMLInputElement;
 
+	const cursorBlinkTimeout = 500;
+	let cursorTimeoutId: number;
+	let cursorActive: boolean;
+
+	function cursorBlink() {
+		cursorActive = !cursorActive;
+		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+	}
+
+	function resetCursorBlink() {
+		cursorActive = true;
+		window.clearTimeout(cursorTimeoutId);
+		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+	}
+
 	function handleInput(event: InputEvent) {
 		switch (event.inputType) {
 			case 'insertText':
 				typingGame.insert(event.data);
+				resetCursorBlink();
 				break;
 
 			case 'deleteContentBackward':
 				typingGame.backspace();
+				resetCursorBlink();
 				break;
 
 			default:
@@ -44,8 +61,15 @@
 	}
 
 	onMount(() => {
+		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+
 		window.addEventListener('click', focusInputField);
-		() => window.removeEventListener('click', focusInputField);
+		focusInputField();
+
+		() => {
+			window.clearTimeout(cursorTimeoutId);
+			window.removeEventListener('click', focusInputField);
+		};
 	});
 </script>
 
@@ -59,7 +83,7 @@
 <div id="game">
 	<div id="text">
 		{#each $text as character, index (character + index)}
-			<span class:cursor={$cursorPosition === index}
+			<span class:cursor={$cursorPosition === index && cursorActive}
 			      class:correct={$characterStates[index] === TypingGame.CharacterState.Correct}
 			      class:incorrect={$characterStates[index] === TypingGame.CharacterState.Incorrect}>{character}</span>
 		{/each}
@@ -110,10 +134,10 @@
 
 	@media (prefers-color-scheme: light) {
 		:root {
-			--background-color:          #ffffff;
+			--background-color:          #fff;
 			--primary-text-color:        #171717;
 			--secondary-text-color:      #707070;
-			--correct-character-color:   #2196F3;
+			--correct-character-color:   #2196f3;
 			--incorrect-character-color: #f44336;
 		}
 	}
