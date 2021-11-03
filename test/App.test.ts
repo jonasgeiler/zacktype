@@ -4,8 +4,8 @@ import App from '../src/App.svelte';
 
 describe('App Component', () => {
 	test('it renders', async () => {
-		const { getByText } = render(App);
+		const { container } = render(App);
 
-		expect(getByText('zacktype')).toBeInTheDocument();
+		expect(container).toBeInTheDocument();
 	});
 });
