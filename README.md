@@ -22,7 +22,7 @@
 - [X] Calculate and display WPM
 - [ ] More unit tests
 - [ ] Make PWA-ready
-- [ ] Maybe make a light and dark theme?
+- [X] Maybe make a light and dark theme?
 - [ ] Maybe add some settings?
 - [ ] Maybe use quotes instead of random text?
 

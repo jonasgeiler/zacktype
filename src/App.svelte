@@ -108,6 +108,16 @@
 		--incorrect-character-color: #f44336;
 	}
 
+	@media (prefers-color-scheme: light) {
+		:root {
+			--background-color:          #ffffff;
+			--primary-text-color:        #171717;
+			--secondary-text-color:      #707070;
+			--correct-character-color:   #2196F3;
+			--incorrect-character-color: #f44336;
+		}
+	}
+
 	body {
 		height:                  100%;
 		width:                   100%;
