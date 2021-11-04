@@ -51,7 +51,17 @@ export class TypingGame {
 	/** Time the user finished typing */
 	public readonly endTime: Readable<number | null>;
 
+	/** User's words/minute score */
+	public readonly wpm: Readable<number>;
 
+	/** User's characters/second score */
+	public readonly cps: Readable<number>;
+
+	/** Amount of mistakes that the user made while typing */
+	public readonly mistakes: Readable<number>;
+
+	/** Accuracy of the user's typing */
+	public readonly accuracy: Readable<number>;
 
 	/**
 	 * Resets the game.
@@ -74,7 +84,7 @@ export class TypingGame {
 		// Init inputText store with an empty string
 		const inputText = writable('');
 
-		// Init characterStates store, a derived store from text and inputText
+		// Init characterStates store, a derived store which loops through text and compares each character with inputText and determines each character's state
 		const characterStates = derived(
 			[ text, inputText ],
 			([ $text, $inputText ]) => {
@@ -96,7 +106,7 @@ export class TypingGame {
 			[],
 		);
 
-		// Init gameState store, a derived store from text and inputText
+		// Init gameState store, a derived store which compares text and inputText to determine current game state
 		const gameState = derived(
 			[ text, inputText ],
 			([ $text, $inputText ]) => {
@@ -111,7 +121,7 @@ export class TypingGame {
 			GameState.Idle,
 		);
 
-		// Init cursorPosition store, a derived store from inputText
+		// Init cursorPosition store, a derived store calculated from inputText length
 		const cursorPosition = derived(
 			inputText,
 			$inputText => $inputText.length, // Cursor position is always the last position of the inputText
@@ -132,6 +142,68 @@ export class TypingGame {
 
 		// Init startTime store with null
 		const endTime = writable<number | null>(null);
+
+		// Init wpm store, a derived store which calculates the user's words per minute score from various other stores
+		const wpm = derived(
+			[ mistakePositions, correctedMistakePositions, totalTypedCharacters, startTime, endTime ],
+			([ $mistakePositions, $correctedMistakePositions, $totalTypedCharacters, $startTime, $endTime ]) => {
+				if ($startTime == null) return 0;
+				if ($endTime == null) $endTime = Date.now(); // If endTime hasn't been set yet, just use current time
+
+				// https://www.speedtypingonline.com/typing-equations
+
+				const typedWords = $totalTypedCharacters / 5; // We use 5 here, because that's the average word length in the English language and therefore commonly used to calculate WPM
+				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
+				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
+				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
+				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakePositions.length; // Calculate amount of uncorrected mistakes
+				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
+				const netWPM = grossWPM - errorRate; // Calculate net WPM
+
+				return +Math.max(netWPM, 0).toFixed(1); // Make sure netWPM isn't negative and round it to one decimal position
+			},
+		);
+
+		// Init cps store, a derived store which calculates the user's characters per second score from various other stores
+		const cps = derived(
+			[ mistakePositions, correctedMistakePositions, totalTypedCharacters, startTime, endTime ],
+			([ $mistakePositions, $correctedMistakePositions, $totalTypedCharacters, $startTime, $endTime ]) => {
+				if ($startTime == null) return 0;
+				if ($endTime == null) $endTime = Date.now(); // If endTime hasn't been set yet, just use current time
+
+				// https://www.speedtypingonline.com/typing-equations
+				// This uses the same method but with seconds instead of minutes, and characters instead of words
+
+				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
+				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
+				const grossCPS = $totalTypedCharacters / elapsedSeconds; // Calculate gross CPS
+				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakePositions.length; // Calculate amount of uncorrected mistakes
+				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
+				const netCPS = grossCPS - errorRate; // Calculate net CPS
+
+				return +Math.max(netCPS, 0).toFixed(1); // Make sure netCPS isn't negative and round it to one decimal position
+			},
+		);
+
+		// Init mistakes store, a derived store from mistakePositions
+		const mistakes = derived(
+			mistakePositions,
+			$mistakePositions => $mistakePositions.length,
+			0,
+		);
+
+		// Init accuracy store, a derived store which calculates the user's typing accuracy from the amount of mistakes and the total amount of typed characters
+		const accuracy = derived(
+			[ mistakePositions, totalTypedCharacters ],
+			([ $mistakePositions, $totalTypedCharacters ]) => {
+				if ($totalTypedCharacters == 0) return 0;
+
+				const charactersTypedWithoutMistakes = ($totalTypedCharacters - $mistakePositions.length); // Calculate the amount of characters typed without mistakes
+
+				return Math.round((charactersTypedWithoutMistakes / $totalTypedCharacters) * 100); // Calculate accuracy, convert to percent and round
+			}
+		)
 
 		// Subscribe to changes to characterStates
 		Utils.subscribeAll(
@@ -186,6 +258,10 @@ export class TypingGame {
 		this.characterStates = characterStates;
 		this.gameState = gameState;
 		this.cursorPosition = cursorPosition;
+		this.wpm = wpm;
+		this.cps = cps;
+		this.mistakes = mistakes;
+		this.accuracy = accuracy;
 
 		// Set the reset method
 		this.reset = (_textOrMinLength?: (string | number)) => {
