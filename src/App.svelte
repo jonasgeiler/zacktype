@@ -94,7 +94,7 @@
 	<div id="hidden-form">
 		<label for="input-field">Type here:</label>
 		<input bind:this={hiddenInput} bind:value={$inputText} on:keyup={resetInputFieldSelection} on:selectionchange={resetInputFieldSelection}
-		       id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+		       id="input-field" type="text" tabindex="0" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 	</div>
 {/if}
 
