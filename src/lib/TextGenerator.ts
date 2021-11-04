@@ -9,7 +9,7 @@ export class TextGenerator {
 	 * Generates a random paragraph of text.
 	 * @param minLength - Minimum length of the text. Text generation stops when this length was reached.
 	 */
-	public static generateText(minLength: number): string {
+	public static generateText(minLength: number = 300): string {
 		let sentences = [];
 		do {
 			const wordsInSentence = Utils.randomInteger(10, 20); // 10 to 20 is the average sentence length in the English language
