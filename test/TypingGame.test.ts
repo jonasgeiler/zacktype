@@ -1,6 +1,8 @@
 import { CharacterState, GameState, TypingGame } from '$lib/TypingGame';
-import type { Readable } from 'svelte/store';
-import { get, Writable } from 'svelte/store';
+import { get as _get } from 'svelte/store';
+import type { Readable, Writable } from 'svelte/store';
+
+const get = _get;
 
 function expectReadable<T extends any>(store: Readable<T>, expectValue?: T) {
 	expect(store).toHaveProperty('subscribe');
@@ -11,7 +13,11 @@ function expectReadable<T extends any>(store: Readable<T>, expectValue?: T) {
 	store.subscribe(subscriber);
 
 	expect(subscriber).toHaveBeenCalled();
-	if (expectValue !== undefined) expect(subscriber).toHaveBeenCalledWith(expectValue);
+
+	if (expectValue !== undefined) {
+		expect(get(store)).toEqual(expectValue);
+		expect(subscriber).toHaveBeenCalledWith(expectValue);
+	}
 }
 
 function expectWritable<T extends any>(store: Writable<T>, expectValue?: T) {
@@ -38,9 +44,9 @@ describe('TypingGame', () => {
 
 		expectReadable<string>(text);
 
-		const $text = get(text);
-		expect($text).toEqual(expect.any(String));
-		expect($text.length).toBeGreaterThan(0);
+		// Text should be generated with the default minimum length
+		expect(get(text)).toEqual(expect.any(String));
+		expect(get(text).length).toBeGreaterThan(0);
 	});
 
 	test('initiating with custom text', () => {
@@ -56,12 +62,12 @@ describe('TypingGame', () => {
 
 		expectReadable<string>(text);
 
-		const $text = get(text);
-		expect($text).toEqual(expect.any(String));
-		expect($text.length).toBeGreaterThanOrEqual(500);
+		// Text should be generated with the specified minimum length
+		expect(get(text)).toEqual(expect.any(String));
+		expect(get(text).length).toBeGreaterThanOrEqual(500);
 	});
 
-	test('using inputText store', () => {
+	test('inputText store', () => {
 		const tg = new TypingGame('Hello World!');
 		const { inputText } = tg;
 
@@ -78,7 +84,7 @@ describe('TypingGame', () => {
 		expect(get(inputText)).toEqual(''); // Should be empty again after reset
 	});
 
-	test('using characterStates store', () => {
+	test('characterStates store', () => {
 		const tg = new TypingGame('hey');
 		const { characterStates, inputText } = tg;
 
@@ -118,7 +124,7 @@ describe('TypingGame', () => {
 		expect(get(characterStates)).toEqual([ none, none, none ]); // Should have been reset
 	});
 
-	test('using gameState store', () => {
+	test('gameState store', () => {
 		const tg = new TypingGame('Hello World!');
 		const { gameState, inputText } = tg;
 
@@ -147,7 +153,7 @@ describe('TypingGame', () => {
 	});
 
 	// Here we test two stores at once, because "mistakes" is just the length of mistakePositions
-	test('using mistakePositions and mistakes stores', () => {
+	test('mistakePositions store and mistakes store', () => {
 		const tg = new TypingGame('Hello World!');
 		const { mistakePositions, mistakes, inputText } = tg;
 
@@ -167,15 +173,15 @@ describe('TypingGame', () => {
 		expect(get(mistakes)).toEqual(2); // Two mistakes
 
 		inputText.set('Hey!'); // Insert another mistake
-		expect(get(mistakePositions)).toEqual([ 1, 2, 4 ]); // Contains all mistakes
+		expect(get(mistakePositions)).toEqual([ 1, 2, 3 ]); // Contains all mistakes
 		expect(get(mistakes)).toEqual(3); // Three mistakes
 
 		inputText.set('Hello World!'); // Finish typing
-		expect(get(mistakePositions)).toEqual([ 1, 2, 4 ]); // Should be the same mistakes at the end
+		expect(get(mistakePositions)).toEqual([ 1, 2, 3 ]); // Should be the same mistakes at the end
 		expect(get(mistakes)).toEqual(3); // Still three mistakes
 
 		inputText.set('Hello World?'); // Replace last character with a wrong character, even though the game ended
-		expect(get(mistakePositions)).toEqual([ 1, 2, 4 ]); // Updating inputText when the game ended should be ignored
+		expect(get(mistakePositions)).toEqual([ 1, 2, 3 ]); // Updating inputText when the game ended should be ignored
 		expect(get(mistakes)).toEqual(3); // Still three mistakes
 
 		tg.reset();
@@ -184,7 +190,7 @@ describe('TypingGame', () => {
 		expect(get(mistakes)).toEqual(0); // Should be zero after reset
 	});
 
-	test('using correctedMistakePositions store', () => {
+	test('correctedMistakePositions store', () => {
 		const tg = new TypingGame('Hello World!');
 		const { correctedMistakePositions, inputText } = tg;
 
@@ -222,7 +228,7 @@ describe('TypingGame', () => {
 		expect(get(correctedMistakePositions)).toEqual([]); // Should be empty after reset
 	});
 
-	test('using totalTypedCharacters store', () => {
+	test('totalTypedCharacters store', () => {
 		const tg = new TypingGame('Hello World!');
 		const { totalTypedCharacters, inputText } = tg;
 
@@ -257,146 +263,157 @@ describe('TypingGame', () => {
 		expect(get(totalTypedCharacters)).toEqual(0); // Should be back to zero after reset
 	});
 
-	test('startTime contains the time when user started typing', async () => {
-		const tg = new TypingGame({
-			text: 'Hello World!',
-		});
-		const { startTime } = tg.getStores();
+	test('startTime store', async () => {
+		const tg = new TypingGame('Hello World!');
+		const { startTime, inputText } = tg;
 
 		expectReadable<number | null>(startTime, null);
 
-		expect(get(startTime)).toBeNull();
 		const firstCharTimeStart = Date.now(); // Store time before inserting first character
-		tg.insert('H'); // Insert first character
+		inputText.set('H'); // Insert first character
 		const firstCharTimeEnd = Date.now(); // Store time after inserting first character
+
 		expect(get(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart);
 		expect(get(startTime)).toBeLessThanOrEqual(firstCharTimeEnd);
-		tg.insert('e'); // Insert second character
-		await wait(100); // Wait a bit
-		tg.insert('l'); // Insert third character
-		expect(get(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart); // Insert more characters shouldn't affect startTime
+
+		inputText.set('He'); // Insert second character
+		await wait(1000); // Wait a second
+
+		expect(get(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart); // Adding more characters shouldn't affect startTime
 		expect(get(startTime)).toBeLessThanOrEqual(firstCharTimeEnd);
+
+		tg.reset();
+
+		expect(get(startTime)).toBeNull(); // startTime should be null after reset
 	});
 
-	test('endTime contains the time when user finished typing', async () => {
-		const text = 'Hello World!';
-		const tg = new TypingGame({
-			text,
-		});
-		const { endTime } = tg.getStores();
+	test('endTime store', async () => {
+		const tg = new TypingGame('Hello World!');
+		const { endTime, inputText } = tg;
 
 		expectReadable<number | null>(endTime, null);
 
-		expect(get(endTime)).toBeNull();
-		tg.insert('H'); // Insert first character
+		inputText.set('H'); // Insert first character
 		expect(get(endTime)).toBeNull(); // Inserting the first character shouldn't affect endTime
-		for (let char of text.slice(1, -1)) {
-			tg.insert(char); // Insert the rest of the characters, but not the last one
-			await wait(10); // Wait a little bit
-		}
-		expect(get(endTime)).toBeNull(); // User didn't finished typing yet
+
+		inputText.set('Hello World'); // Insert all characters except the last one
+		expect(get(endTime)).toBeNull(); // User didn't finished typing yet, so no endTime
+
 		const lastCharTimeStart = Date.now(); // Store time before inserting last character
-		tg.insert('!'); // Insert last character
+		inputText.set('Hello World!'); // Insert last character
 		const lastCharTimeEnd = Date.now(); // Store time after inserting last character
+
 		expect(get(endTime)).toBeGreaterThanOrEqual(lastCharTimeStart);
 		expect(get(endTime)).toBeLessThanOrEqual(lastCharTimeEnd);
+
+		tg.reset();
+
+		expect(get(endTime)).toBeNull(); // endTime should be null after reset
 	});
 
-	test('cursorPosition contains the current cursor position', () => {
-		const text = 'Hello World!';
-		const tg = new TypingGame({
-			text,
-		});
-		const { cursorPosition } = tg.getStores();
+	test('cursorPosition store', () => {
+		const tg = new TypingGame('Hello World!');
+		const { cursorPosition, inputText } = tg;
 
 		expectReadable<number>(cursorPosition, 0);
 
-		expect(get(cursorPosition)).toEqual(0);
-		tg.backspace(); // These shouldn't affect cursorPosition
-		tg.backspace();
-		tg.backspace();
-		expect(get(cursorPosition)).toEqual(0); // Can't do backspace if cursor is at beginning
-		tg.insert('H'); // Insert first character
+		inputText.set('');
+		expect(get(cursorPosition)).toEqual(0); // This shouldn't affect cursorPosition
+
+		inputText.set('H'); // Add first character
 		expect(get(cursorPosition)).toEqual(1); // Cursor should have move forward
-		tg.insert('e'); // Insert second character
+
+		inputText.set('He'); // Add second character
 		expect(get(cursorPosition)).toEqual(2); // Cursor should have moved forward again
-		tg.insert('y'); // Wrong character
+
+		inputText.set('Hey'); // Add wrong character
 		expect(get(cursorPosition)).toEqual(3); // Wrong characters should still move the cursor forward
-		tg.backspace(); // Remove wrong character
-		expect(get(cursorPosition)).toEqual(2); // Using backspace should move the character backwards
-		tg.backspace(); // Remove remaining characters
-		tg.backspace();
-		tg.backspace(); // One extra just for fun
+
+		inputText.set('He'); // Remove wrong character
+		expect(get(cursorPosition)).toEqual(2); // Removing characters should move the cursor backwards
+
+		inputText.set(''); // Reset inputText
 		expect(get(cursorPosition)).toEqual(0);
-		let pos = 0; // Keeps track of cursor position
-		for (let char of text) {
-			tg.insert(char); // Insert all characters
-			pos++;
-			expect(get(cursorPosition)).toEqual(pos); // Test position for each character
-		}
-		expect(get(cursorPosition)).toEqual(text.length);
-		tg.insert('s'); // Insert an extra character at the end
-		expect(get(cursorPosition)).toEqual(text.length); // Cursor shouldn't move forward when it has reached the end
-		tg.backspace(); // Remove extra character
-		expect(get(cursorPosition)).toEqual(text.length);
+
+		inputText.set('Hello World!'); // Finish typing
+		expect(get(cursorPosition)).toEqual(12); // Should match the inputText length at the end
+
+		inputText.set('Hello World'); // Remove a character, even though the game ended
+		expect(get(cursorPosition)).toEqual(12); // Cursor shouldn't move backwards when the game ended
+
+		inputText.set('Hello World!?'); // Add a character, even though the game ended
+		expect(get(cursorPosition)).toEqual(12); // Cursor shouldn't move forward when the game ended
+
+		tg.reset();
+
+		expect(get(cursorPosition)).toEqual(0);
 	});
 
-	test('cursorCharacter contains the character at cursor position', () => {
+	test('cps store', async () => {
 		const text = 'Hello World!';
-		const tg = new TypingGame({
-			text,
-		});
-		const { cursorCharacter } = tg.getStores();
-
-		expectReadable<string>(cursorCharacter, 'H');
-
-		expect(get(cursorCharacter)).toEqual('H');
-		tg.insert('H'); // Insert first character
-		expect(get(cursorCharacter)).toEqual('e'); // Should be the second character
-		tg.insert('e'); // Insert second character
-		expect(get(cursorCharacter)).toEqual('l'); // Should be the third character
-		tg.insert('y'); // Insert wrong character
-		expect(get(cursorCharacter)).toEqual('l'); // Should be the fourth character, unaffected by the wrong input
-		tg.insert('!'); // Insert another wrong character
-		expect(get(cursorCharacter)).toEqual('o'); // Should be the fifth character, again, unaffected by the wrong input
-		tg.backspace(); // Remove !
-		expect(get(cursorCharacter)).toEqual('l'); // Should be back to the fourth character
-		tg.backspace(); // Remove y
-		expect(get(cursorCharacter)).toEqual('l'); // Should be back to the third character
-		tg.backspace(); // Remove e
-		expect(get(cursorCharacter)).toEqual('e'); // Should be back to the second character
-		let pos = 1; // Keeps track of character position
-		for (let char of text.substr(1)) {
-			tg.insert(char); // Insert the remaining characters
-			pos++;
-			expect(get(cursorCharacter)).toEqual(text[pos]); // Check each character
-		}
-		expect(get(cursorCharacter)).toBeUndefined(); // Cursor character will be undefined at the end
-		tg.insert('!'); // Insert character, although we're at the end
-		expect(get(cursorCharacter)).toBeUndefined(); // Cursor character shouldn't be affected
-		tg.backspace(); // Remove last character, although we're at the end
-		expect(get(cursorCharacter)).toBeUndefined(); // Cursor character shouldn't be affected
-	});
-
-	test('it correctly provides a readable cps store', () => {
-		const tg = new TypingGame();
-		const { cps } = tg.getStores();
+		const tg = new TypingGame(text);
+		const { cps, inputText } = tg;
 
 		expectReadable<number>(cps, 0);
+
+		// Type all characters
+		for (let i = 0; i < text.length; i++) {
+			const start = Date.now();
+			inputText.set(text.substr(0, i));
+			const end = Date.now();
+
+			await wait(Math.max(100 - (end - start), 0));
+		}
+
+		// Check CPS ± 5
+		expect(get(cps)).toBeGreaterThanOrEqual(5);
+		expect(get(cps)).toBeLessThanOrEqual(15);
+
+		tg.reset();
+
+		expect(get(cps)).toEqual(0);
 	});
 
-	test('it correctly provides a readable wpm store', () => {
-		const tg = new TypingGame();
-		const { wpm } = tg.getStores();
+	test('wpm store', async () => {
+		const text = 'Hello World!';
+		const tg = new TypingGame(text);
+		const { wpm, inputText } = tg;
 
 		expectReadable<number>(wpm, 0);
+
+		// Type all characters
+		for (let i = 0; i < text.length; i++) {
+			const start = Date.now();
+			inputText.set(text.substr(0, i));
+			const end = Date.now();
+
+			await wait(Math.max(100 - (end - start), 0));
+		}
+
+		// Check WPM ± 5
+		expect(get(wpm)).toBeGreaterThanOrEqual(115);
+		expect(get(wpm)).toBeLessThanOrEqual(125);
+
+		tg.reset();
+
+		expect(get(wpm)).toEqual(0);
 	});
 
-	test('it correctly provides a readable accuracy store', () => {
-		const tg = new TypingGame();
-		const { accuracy } = tg.getStores();
+	test('accuracy store', () => {
+		const tg = new TypingGame('hey!');
+		const { accuracy, inputText } = tg;
 
 		expectReadable<number>(accuracy, 0);
+
+		inputText.set('he'); // Add two correct characters
+		expect(get(accuracy)).toEqual(100); // Accuracy should be 100%, we didn't do any mistakes yet
+
+		inputText.set('help'); // Finish typing with two wrong characters
+		expect(get(accuracy)).toEqual(50); // Accuracy should be 50%, because 2 out of 4 characters are wrong
+
+		tg.reset();
+
+		expect(get(accuracy)).toEqual(0); // Accuracy should be 0 after reset
 	});
 
 });

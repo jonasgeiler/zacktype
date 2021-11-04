@@ -214,7 +214,7 @@ export class TypingGame {
 		const accuracy = derived(
 			[ mistakePositions, totalTypedCharacters ],
 			([ $mistakePositions, $totalTypedCharacters ]) => {
-				if ($totalTypedCharacters == 0) return 0;
+				if ($totalTypedCharacters === 0) return 0; // If totalTypedCharacters is zero, return zero, to prevent a division by zero
 
 				const charactersTypedWithoutMistakes = ($totalTypedCharacters - $mistakePositions.length); // Calculate the amount of characters typed without mistakes
 
@@ -260,9 +260,9 @@ export class TypingGame {
 					const state = $characterStates[pos]; // Get character state
 
 					if (state === CharacterState.Incorrect && !$mistakePositions.includes(pos)) {
-						mistakePositions.update(positions => [ ...positions, pos ]); // If character is incorrect and not already in the list of mistakes, add character position to list of mistakes
+						mistakePositions.set([ ...$mistakePositions, pos ]); // If character is incorrect and not already in the list of mistakes, add character position to list of mistakes
 					} else if (state === CharacterState.Correct && $mistakePositions.includes(pos) && !$correctedMistakePositions.includes(pos)) {
-						correctedMistakePositions.update(positions => [ ...positions, pos ]); // If character is correct, but also in mistakePositions, it means the user corrected the mistake - add the character position to list of corrected mistakes, if not already in it
+						correctedMistakePositions.set([ ...$correctedMistakePositions, pos ]); // If character is correct, but also in mistakePositions, it means the user corrected the mistake - add the character position to list of corrected mistakes, if not already in it
 					}
 				}
 			},
