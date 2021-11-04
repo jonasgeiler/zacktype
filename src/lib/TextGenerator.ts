@@ -1,4 +1,4 @@
-import { Utils } from './Utils';
+import { Utils } from '$lib/Utils';
 
 /**
  * Handles random text generation.

@@ -1,7 +1,7 @@
-import { Utils } from '$lib/Utils';
 import type { Readable, Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
-import { TextGenerator } from './TextGenerator';
+import { TextGenerator } from '$lib/TextGenerator';
+import { Utils } from '$lib/Utils';
 
 /** State of a character */
 export enum CharacterState {

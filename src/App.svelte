@@ -82,7 +82,7 @@
 
 {#if $gameState !== GameState.Finished}
 	<div id="hidden-form">
-		<label for="input-field">Type here</label>
+		<label for="input-field">Type here:</label>
 		<input bind:this={hiddenInput} bind:value={$inputText} on:keyup={resetInputFieldSelection} on:selectionchange={resetInputFieldSelection}
 		       id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 	</div>
@@ -181,9 +181,19 @@
 	}
 
 	#hidden-form {
-		position: fixed;
-		top:      -100vh;
-		left:     -100vw;
+		position:       fixed;
+		z-index:        -1;
+		top:            0;
+		left:           0;
+		display:        block;
+		margin:         0;
+		padding:        0;
+		resize:         none;
+		cursor:         default;
+		pointer-events: none;
+		opacity:        0;
+		border:         none;
+		outline:        none;
 	}
 
 	#game {
