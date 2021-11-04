@@ -104,7 +104,7 @@
 			<span class:cursor={$cursorPosition === index && cursorActive}
 			      class:correct={$characterStates[index] === CharacterState.Correct}
 			      class:incorrect={$characterStates[index] === CharacterState.Incorrect}
-			      class:corrected={$correctedMistakePositions.includes(index)}>{character}</span>
+			      class:corrected={$correctedMistakePositions.includes(index) && $cursorPosition > index}>{character}</span>
 		{/each}
 	</div>
 
