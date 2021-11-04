@@ -1,7 +1,7 @@
 import type { Readable, Unsubscriber, Writable } from 'svelte/store';
 
 /** List of Readable stores. */
-type Stores = Array<Readable<any>>;
+type Stores = [ Readable<any>, ...Array<Readable<any>> ] | Array<Readable<any>>;
 
 /** Values from a list of Readable stores. */
 type StoresValues<T> = {
@@ -82,7 +82,7 @@ export class Utils {
 	public static makeReadable<T extends any>(writable: Writable<T>): Readable<T> {
 		return {
 			subscribe: writable.subscribe,
-		}
+		};
 	}
 
 }

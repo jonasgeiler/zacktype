@@ -1,5 +1,5 @@
 import { Utils } from '$lib/Utils';
-import type { Readable } from 'svelte/store';
+import type { Readable, Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 import { TextGenerator } from './TextGenerator';
 
@@ -26,8 +26,8 @@ export class TypingGame {
 	/** The text used in the game */
 	public readonly text: Readable<string>;
 
-	/** The whole text typed in by the user */
-	public readonly inputText: Readable<string>;
+	/** Current user input */
+	public readonly inputText: Writable<string>;
 
 	/** Holds the current state of all characters in the text */
 	public readonly characterStates: Readable<CharacterState[]>;
@@ -76,6 +76,11 @@ export class TypingGame {
 	 * @param textOrMinLength - Either a string to use as text, or a number to use as minimum length for the randomly generated text
 	 */
 	constructor(textOrMinLength: (string | number) = 300) {
+
+		/** Whether changes to inputText should be ignored */
+		let inputDisabled = false;
+
+
 		// Init text store with a randomly generated text or using the specified one
 		const text = writable(
 			typeof textOrMinLength === 'string'
@@ -89,7 +94,9 @@ export class TypingGame {
 		// Init characterStates store, a derived store which loops through text and compares each character with inputText and determines each character's state
 		const characterStates = derived(
 			[ text, inputText ],
-			([ $text, $inputText ]) => {
+			([ $text, $inputText ], set) => {
+				if (inputDisabled) return;
+
 				let characterStates: CharacterState[] = new Array($text.length); // Init an empty array with the same length as the text
 
 				// Loop through text indices
@@ -103,7 +110,7 @@ export class TypingGame {
 					}
 				}
 
-				return characterStates;
+				set(characterStates);
 			},
 			[],
 		);
@@ -111,13 +118,15 @@ export class TypingGame {
 		// Init gameState store, a derived store which compares text and inputText to determine current game state
 		const gameState = derived(
 			[ text, inputText ],
-			([ $text, $inputText ]) => {
+			([ $text, $inputText ], set) => {
+				if (inputDisabled) return;
+
 				if ($inputText.length >= $text.length) {
-					return GameState.Finished; // If inputText has the same length as text the user finished typing
+					set(GameState.Finished); // If inputText has the same length as text the user finished typing
 				} else if ($inputText.length > 0) {
-					return GameState.Started; // If inputText has content the user started typing
+					set(GameState.Started); // If inputText has content the user started typing
 				} else {
-					return GameState.Idle; // Otherwise the game hasn't yet started and is doing nothing
+					set(GameState.Idle); // Otherwise the game hasn't yet started and is doing nothing
 				}
 			},
 			GameState.Idle,
@@ -126,7 +135,11 @@ export class TypingGame {
 		// Init cursorPosition store, a derived store calculated from inputText length
 		const cursorPosition = derived(
 			inputText,
-			$inputText => $inputText.length, // Cursor position is always the last position of the inputText
+			($inputText, set) => {
+				if (inputDisabled) return;
+
+				set($inputText.length); // Cursor position is always the last position of the inputText
+			},
 			0,
 		);
 
@@ -165,6 +178,7 @@ export class TypingGame {
 
 				return +Math.max(netWPM, 0).toFixed(1); // Make sure netWPM isn't negative and round it to one decimal position
 			},
+			0,
 		);
 
 		// Init cps store, a derived store which calculates the user's characters per second score from various other stores
@@ -186,6 +200,7 @@ export class TypingGame {
 
 				return +Math.max(netCPS, 0).toFixed(1); // Make sure netCPS isn't negative and round it to one decimal position
 			},
+			0,
 		);
 
 		// Init mistakes store, a derived store from mistakePositions
@@ -204,10 +219,36 @@ export class TypingGame {
 				const charactersTypedWithoutMistakes = ($totalTypedCharacters - $mistakePositions.length); // Calculate the amount of characters typed without mistakes
 
 				return Math.round((charactersTypedWithoutMistakes / $totalTypedCharacters) * 100); // Calculate accuracy, convert to percent and round
-			}
-		)
+			},
+			0,
+		);
 
-		// Subscribe to changes to characterStates
+
+		/** Holds the input text from before it was updated */
+		let oldInputText = '';
+
+		// Subscribe to changes to inputText
+		inputText.subscribe($inputText => {
+			if (inputDisabled) return;
+
+			if ($inputText.length >= oldInputText.length && $inputText !== oldInputText) {
+				totalTypedCharacters.update(n => n + 1); // If the text got longer or a character has changed, increase the total amount of typed characters
+			}
+
+			oldInputText = $inputText;
+		});
+
+		// Subscribe to changes to gameState
+		gameState.subscribe($gameState => {
+			if ($gameState === GameState.Started) {
+				startTime.set(Date.now()); // If gameState changes to started, set startTime to current time
+			} else if ($gameState === GameState.Finished) {
+				inputDisabled = true; // If gameState changes to finished, disable user input
+				endTime.set(Date.now()); // ... and set endTime to current time
+			}
+		});
+
+		// Subscribe to changes to characterStates, mistakePositions and correctedMistakePositions and update those according to characterStates
 		Utils.subscribeAll(
 			[ characterStates, mistakePositions, correctedMistakePositions ],
 			([ $characterStates, $mistakePositions, $correctedMistakePositions ]) => {
@@ -224,26 +265,6 @@ export class TypingGame {
 			},
 		);
 
-		// Subscribe to changes to gameState
-		gameState.subscribe($gameState => {
-			if ($gameState === GameState.Started) {
-				startTime.set(Date.now()); // If gameState changes to started, set startTime to current time
-			} else if ($gameState === GameState.Finished) {
-				endTime.set(Date.now()); // If gameState changes to finished, set endTime to current time
-			}
-		});
-
-		/** Holds the input text from before it was updated */
-		let oldInputText = '';
-
-		// Subscribe to changes to inputText
-		inputText.subscribe($inputText => {
-			if ($inputText.length >= oldInputText.length && $inputText !== oldInputText) {
-				totalTypedCharacters.update(n => n + 1); // If the text got longer or a character has changed, increase the total amount of typed characters
-			}
-
-			oldInputText = $inputText;
-		});
 
 		// Expose inputText store as writable store
 		this.inputText = inputText;
@@ -265,7 +286,8 @@ export class TypingGame {
 		this.mistakes = mistakes;
 		this.accuracy = accuracy;
 
-		// Set the reset method
+
+		// Define the reset method
 		this.reset = (_textOrMinLength?: (string | number)) => {
 			if (_textOrMinLength != null) {
 				// Reset text using reset parameter
@@ -289,6 +311,9 @@ export class TypingGame {
 			totalTypedCharacters.set(0); // Reset totalTypedCharacters
 			startTime.set(null); // Reset startTime
 			endTime.set(null); // Reset endTime
+
+			oldInputText = ''; // Reset this variable so totalTypedCharacters works next time
+			inputDisabled = false; // Re-enable user input
 		};
 	}
 
