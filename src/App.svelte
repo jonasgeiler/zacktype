@@ -18,43 +18,62 @@
 		mistakes,
 	} = typingGame;
 
-	let inputField: HTMLInputElement;
+	let hiddenInput: HTMLInputElement;
 
-	const cursorBlinkTimeout = 500;
+	const cursorBlinkInterval = 500;
 	let cursorTimeoutId: number;
 	let cursorActive: boolean;
 
-	function cursorBlink() {
+	/**
+	 * Toggles the cursorActive variable and causes the cursor to blink every few milliseconds
+	 */
+	function makeCursorBlink() {
 		cursorActive = !cursorActive;
-		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
 	}
 
+	/**
+	 * Reset cursor blinking.
+	 * Calling this on every keystroke prevents blinking WHILE typing.
+	 * When the user pauses again for a bit, it starts blinking again.
+	 */
 	function resetCursorBlink() {
 		cursorActive = true;
 		window.clearTimeout(cursorTimeoutId);
-		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
 	}
 
+	/**
+	 * Focus the hidden input field
+	 */
 	function focusInputField() {
-		if (!inputField || $gameState == GameState.Finished) return;
-		inputField.focus();
+		if (!hiddenInput || $gameState == GameState.Finished) return;
+		hiddenInput.focus();
 	}
 
-	inputText.subscribe(text => {
-		if (text) {
-			resetCursorBlink(); // Reset cursor blink when inputText was updated
+	/**
+	 * Reset selection range of the input field.
+	 * When called in onKeyUp, it prevents the user from moving the cursor or selecting text.
+	 * When called in onSelectionChange, it does the same, but also on mobile and it works better (not yet implemented by many browsers)
+	 */
+	function resetInputFieldSelection() {
+		hiddenInput.setSelectionRange(hiddenInput.value.length, hiddenInput.value.length); // Move cursor to end of input
+	}
 
-			if (inputField) inputField.setSelectionRange(text.length, text.length); // Move cursor to end of input, just in case
-		}
+	// Support to inputText changes
+	inputText.subscribe(text => {
+		if (text) resetCursorBlink(); // Reset cursor blink when inputText was updated
 	});
 
 	onMount(() => {
-		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+		// Start cursor blinking
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
 
-		window.addEventListener('click', focusInputField);
-		focusInputField();
+		focusInputField(); // Focus the hidden input field initially
+		window.addEventListener('click', focusInputField); // If user clicked anywhere it should focus the hidden input field
 
 		() => {
+			// Cleanup
 			window.clearTimeout(cursorTimeoutId);
 			window.removeEventListener('click', focusInputField);
 		};
@@ -64,7 +83,8 @@
 {#if $gameState !== GameState.Finished}
 	<div id="hidden-form">
 		<label for="input-field">Type here</label>
-		<input bind:this={inputField} bind:value={$inputText} id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+		<input bind:this={hiddenInput} bind:value={$inputText} on:keyup={resetInputFieldSelection} on:selectionchange={resetInputFieldSelection}
+		       id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 	</div>
 {/if}
 
@@ -162,8 +182,8 @@
 
 	#hidden-form {
 		position: fixed;
-		top:      -100vh;
-		left:     -100vw;
+		top:      0;
+		left:     0;
 	}
 
 	#game {
