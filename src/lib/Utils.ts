@@ -39,6 +39,14 @@ export class Utils {
 	}
 
 	/**
+	 * Have a given probability that this function returns true.
+	 * @param percentage - Probability in percent
+	 */
+	public static withProbability(percentage: number) {
+		return Math.random() * 100 < percentage;
+	}
+
+	/**
 	 * Subscribe to multiple svelte stores at once.
 	 * @param stores - List of stores to subscribe to.
 	 * @param callback - Callback that is called with the store values each time one of stores was updated.

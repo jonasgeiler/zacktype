@@ -11,6 +11,31 @@ test('randomInteger', () => {
 	}
 });
 
+test('withProbability', () => {
+	// I'm using a very over-complicated testing method here, which confirms the function is working by calculating the cumulative distribution and checking the average value
+
+	let results: number[] = [];
+	let total = 0;
+
+	// Run 10000 times
+	for (let i = 0; i < 10000; i++) {
+		const result = Utils.withProbability(50);
+
+		results.push(+result);
+		total += +result;
+	}
+
+	let cumulativeDistribution: number[] = [ (results[0] / total) ];
+
+	for (let i = 1; i < results.length; i++) {
+		cumulativeDistribution[i] = cumulativeDistribution[i - 1] + (results[i] / total);
+	}
+
+	expect(
+		+(cumulativeDistribution.reduce((a, b) => a + b, 0) / cumulativeDistribution.length).toFixed(1)
+	).toEqual(0.5);
+});
+
 test('subscribeAll', () => {
 	const testStore1 = writable('Hello');
 	const testStore2 = writable('World');

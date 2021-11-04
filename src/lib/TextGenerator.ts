@@ -14,8 +14,8 @@ export class TextGenerator {
 		do {
 			const wordsInSentence = Utils.randomInteger(10, 20); // 10 to 20 is the average sentence length in the English language
 
-			const hasComma = Utils.randomInteger(0, 5) == 0; // Small chance that the word contains a comma
-			const hasHyphen = !hasComma && Utils.randomInteger(0, 100) == 0; // Very small chance that the word contains a hyphen, but only if there's no comma already
+			const hasComma = Utils.withProbability(20); // Small chance that the word contains a comma
+			const hasHyphen = !hasComma && Utils.withProbability(5); // Very small chance that the word contains a hyphen, but only if there's no comma already
 
 			const extraPunctuationPosition = Utils.randomInteger(wordsInSentence * 0.25, wordsInSentence * 0.75); // Put the comma/hyphen somewhere between the second- and third quarter of the sentence
 
@@ -23,12 +23,12 @@ export class TextGenerator {
 			for (let i = 0; i < wordsInSentence; i++) {
 				let word = TextGenerator.getRandomWord();
 
-				const makeUppercase = Utils.randomInteger(0, 200) == 0; // Very, very small chance that the whole word is uppercase
+				const makeUppercase = Utils.withProbability(1); // Very, very small chance that the whole word is uppercase
 
 				if (makeUppercase) {
 					word = word.toUpperCase(); // Make the whole word uppercase
 				} else {
-					const makeFirstLetterUppercase = (i == 0) || Utils.randomInteger(0, 50) == 0; // Always make the first letter uppercase, and add a rather small chance that it is uppercase, no matter the position
+					const makeFirstLetterUppercase = (i == 0) || Utils.withProbability(10); // Always make the first letter uppercase, and add a rather small chance that it is uppercase, no matter the position
 
 					if (makeFirstLetterUppercase) {
 						word = word[0].toUpperCase() + word.substr(1); // Make the first letter uppercase
@@ -48,11 +48,9 @@ export class TextGenerator {
 
 			let sentence = words.join(' '); // Join all words together to form sentence
 
-			const punctuationChance = Utils.randomInteger(0, 10);
-
-			if (punctuationChance <= 5) { // Dot is most common
+			if (Utils.withProbability(50)) { // Dot is most common
 				sentence += '.'; // Add dot punctuation
-			} else if (punctuationChance <= 7) { // Question mark is second most common
+			} else if (Utils.withProbability(50)) { // Question mark is second most common
 				sentence += '?'; // Add question mark punctuation
 			} else { // Otherwise exclamation mark
 				sentence += '!'; // Add exclamation mark punctuation
