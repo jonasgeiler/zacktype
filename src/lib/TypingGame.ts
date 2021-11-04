@@ -231,8 +231,11 @@ export class TypingGame {
 		inputText.subscribe($inputText => {
 			if (inputDisabled) return;
 
+			// Check if text has changed or got longer
 			if ($inputText.length >= oldInputText.length && $inputText !== oldInputText) {
-				totalTypedCharacters.update(n => n + 1); // If the text got longer or a character has changed, increase the total amount of typed characters
+				const { added, changed } = Utils.findDifferences(oldInputText, $inputText); // Find the differences between the old and new inputText
+
+				totalTypedCharacters.update(n => n + added.length + changed.length); // If the text got longer or a character has changed, increase the total amount of typed characters
 			}
 
 			oldInputText = $inputText;
@@ -305,15 +308,15 @@ export class TypingGame {
 				);
 			}
 
+			oldInputText = ''; // Reset this variable so totalTypedCharacters works next time
+			inputDisabled = false; // Re-enable user input
+
 			inputText.set(''); // Reset inputText
 			mistakePositions.set([]); // Reset mistakePositions
 			correctedMistakePositions.set([]); // Reset correctedMistakePositions
 			totalTypedCharacters.set(0); // Reset totalTypedCharacters
 			startTime.set(null); // Reset startTime
 			endTime.set(null); // Reset endTime
-
-			oldInputText = ''; // Reset this variable so totalTypedCharacters works next time
-			inputDisabled = false; // Re-enable user input
 		};
 	}
 

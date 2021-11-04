@@ -8,6 +8,12 @@ type StoresValues<T> = {
 	[K in keyof T]: T[K] extends Readable<infer U> ? U : never;
 };
 
+interface Differences {
+	readonly added: number[];
+	readonly removed: number[];
+	readonly changed: number[];
+}
+
 /** Does nothing (no operation) */
 function noop() {
 }
@@ -83,6 +89,44 @@ export class Utils {
 		return {
 			subscribe: writable.subscribe,
 		};
+	}
+
+	/**
+	 * Get all differences between two strings.
+	 * @param from - The old string.
+	 * @param to - The new string.
+	 */
+	public static findDifferences(from: string, to: string): Differences {
+		let fromArr = [ ...from ];
+		let toArr = [ ...to ];
+
+		if (fromArr.length > toArr.length) {
+			// Add nulls to toArr until it has the same length as fromArr
+			while (fromArr.length !== toArr.length) toArr.push(null);
+		} else if (toArr.length > fromArr.length) {
+			// Add nulls to fromArr until it has the same length as toArr
+			while (toArr.length !== fromArr.length) fromArr.push(null);
+		}
+
+		// Indices of differences
+		let added: number[] = [];
+		let removed: number[] = [];
+		let changed: number[] = [];
+
+		for (let i = 0; i < fromArr.length; i++) {
+			if (fromArr[i] === null) {
+				// Added a character
+				added.push(i);
+			} else if (toArr[i] === null) {
+				// Removed a character
+				removed.push(i);
+			} else if (fromArr[i] !== toArr[i]) {
+				// Changed a character
+				changed.push(i);
+			}
+		}
+
+		return { added, removed, changed };
 	}
 
 }

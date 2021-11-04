@@ -58,4 +58,83 @@ test('makeReadable', () => {
 	writableStore.set('Hi There!'); // Update writable version of the store
 
 	expect(get(readableStore)).toEqual('Hi There!'); // The readable version of the store should also update
-})
+});
+
+test('findDifferences', () => {
+	// No differences
+	expect(Utils.findDifferences('Hello', 'Hello')).toEqual({
+		added:   [],
+		removed: [],
+		changed: [],
+	});
+
+	// Added a character
+	expect(Utils.findDifferences('Hello', 'Hello!')).toEqual({
+		added:   [ 5 ],
+		removed: [],
+		changed: [],
+	});
+
+	// Added multiple characters
+	expect(Utils.findDifferences('Hello', 'Hello!!!')).toEqual({
+		added:   [ 5, 6, 7 ],
+		removed: [],
+		changed: [],
+	});
+
+	// Removed a character
+	expect(Utils.findDifferences('Hello', 'Hell')).toEqual({
+		added:   [],
+		removed: [ 4 ],
+		changed: [],
+	});
+
+	// Removed multiple characters
+	expect(Utils.findDifferences('Hello', 'He')).toEqual({
+		added:   [],
+		removed: [ 2, 3, 4 ],
+		changed: [],
+	});
+
+	// Changed a character
+	expect(Utils.findDifferences('Hello!', 'Hello?')).toEqual({
+		added:   [],
+		removed: [],
+		changed: [ 5 ],
+	});
+
+	// Changed multiple characters
+	expect(Utils.findDifferences('Hello World', 'Hello Jest!')).toEqual({
+		added:   [],
+		removed: [],
+		changed: [ 6, 7, 8, 9, 10 ],
+	});
+
+	// Changed and added a character
+	expect(Utils.findDifferences('Hello!', 'Hello?!')).toEqual({
+		added:   [ 6 ],
+		removed: [],
+		changed: [ 5 ],
+	});
+
+	// Changed and added multiple characters
+	expect(Utils.findDifferences('Hello', 'Hey There')).toEqual({
+		added:   [ 5, 6, 7, 8 ],
+		removed: [],
+		changed: [ 2, 3, 4 ],
+	});
+
+	// Changed and removed a character
+	expect(Utils.findDifferences('Hello!!', 'Hello?')).toEqual({
+		added:   [],
+		removed: [ 6 ],
+		changed: [ 5 ],
+	});
+
+	// Changed and removed multiple characters
+	expect(Utils.findDifferences('Hey There', 'Hello')).toEqual({
+		added:   [],
+		removed: [ 5, 6, 7, 8 ],
+		changed: [ 2, 3, 4 ],
+	});
+});
