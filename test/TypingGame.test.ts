@@ -292,7 +292,14 @@ test('startTime store', async () => {
 	inputText.set('He'); // Insert second character
 	await wait(1000); // Wait a second
 
-	expect($(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart); // Adding more characters shouldn't affect startTime
+	// Adding more characters shouldn't affect startTime
+	expect($(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart);
+	expect($(startTime)).toBeLessThanOrEqual(firstCharTimeEnd);
+
+	inputText.set(''); // Remove all characters
+
+	// Removing all characters again shouldn't affect startTime
+	expect($(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart);
 	expect($(startTime)).toBeLessThanOrEqual(firstCharTimeEnd);
 
 	tg.reset();
@@ -375,7 +382,7 @@ test('cps store', async () => {
 		inputText.set(text.substr(0, i));
 		const end = Date.now();
 
-		await wait(Math.max(100 - (end - start), 0));
+		await wait(Math.max(100 - (end - start), 0)); // Wait 100ms (normalized using the time updating inputText took)
 	}
 
 	expect($(cps)).toBeGreaterThanOrEqual(0);
@@ -399,7 +406,7 @@ test('wpm store', async () => {
 		inputText.set(text.substr(0, i));
 		const end = Date.now();
 
-		await wait(Math.max(100 - (end - start), 0));
+		await wait(Math.max(100 - (end - start), 0)); // Wait 100ms (normalized using the time updating inputText took)
 	}
 
 	expect($(wpm)).toBeGreaterThanOrEqual(100);
