@@ -1,5 +1,5 @@
 <script lang="ts">
-	import TypingGame from '$lib/TypingGame';
+	import { CharacterState, GameState, TypingGame } from '$lib/TypingGame';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 
@@ -9,75 +9,82 @@
 		text,
 		inputText,
 		characterStates,
-		cursorPosition,
 		gameState,
+		cursorPosition,
+		correctedMistakePositions,
 		wpm,
 		cps,
 		accuracy,
 		mistakes,
-		correctedMistakePositions,
-	} = typingGame.getStores();
+	} = typingGame;
 
-	let inputField: HTMLInputElement;
+	let hiddenInput: HTMLInputElement;
 
-	const cursorBlinkTimeout = 500;
+	const cursorBlinkInterval = 500;
 	let cursorTimeoutId: number;
 	let cursorActive: boolean;
 
-	function cursorBlink() {
+	/**
+	 * Toggles the cursorActive variable and causes the cursor to blink every few milliseconds
+	 */
+	function makeCursorBlink() {
 		cursorActive = !cursorActive;
-		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
 	}
 
+	/**
+	 * Reset cursor blinking.
+	 * Calling this on every keystroke prevents blinking WHILE typing.
+	 * When the user pauses again for a bit, it starts blinking again.
+	 */
 	function resetCursorBlink() {
 		cursorActive = true;
 		window.clearTimeout(cursorTimeoutId);
-		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
 	}
 
-	function handleInput(event: InputEvent) {
-		switch (event.inputType) {
-			case 'insertText':
-				typingGame.insert(event.data);
-				resetCursorBlink();
-				break;
-
-			case 'deleteContentBackward':
-				typingGame.backspace();
-				resetCursorBlink();
-				break;
-
-			default:
-				inputField.value = inputText.get();
-		}
-	}
-
+	/**
+	 * Focus the hidden input field
+	 */
 	function focusInputField() {
-		if (!inputField || gameState.get() == TypingGame.GameState.Ended) return;
-		inputField.focus();
+		if (!hiddenInput || $gameState == GameState.Finished) return;
+		hiddenInput.focus();
 	}
 
-	function restartGame() {
-		typingGame.reset();
+	/**
+	 * Reset selection range of the input field.
+	 * When called in onKeyUp, it prevents the user from moving the cursor or selecting text.
+	 * When called in onSelectionChange, it does the same, but also on mobile and it works better (not yet implemented by many browsers)
+	 */
+	function resetInputFieldSelection() {
+		hiddenInput.setSelectionRange(hiddenInput.value.length, hiddenInput.value.length); // Move cursor to end of input
 	}
+
+	// Support to inputText changes
+	inputText.subscribe(text => {
+		if (text) resetCursorBlink(); // Reset cursor blink when inputText was updated
+	});
 
 	onMount(() => {
-		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
+		// Start cursor blinking
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
 
-		window.addEventListener('click', focusInputField);
-		focusInputField();
+		focusInputField(); // Focus the hidden input field initially
+		window.addEventListener('click', focusInputField); // If user clicked anywhere it should focus the hidden input field
 
 		() => {
+			// Cleanup
 			window.clearTimeout(cursorTimeoutId);
 			window.removeEventListener('click', focusInputField);
 		};
 	});
 </script>
 
-{#if $gameState !== TypingGame.GameState.Ended}
+{#if $gameState !== GameState.Finished}
 	<div id="hidden-form">
 		<label for="input-field">Type here</label>
-		<input bind:this={inputField} value={$inputText} on:input={handleInput} id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+		<input bind:this={hiddenInput} bind:value={$inputText} on:keyup={resetInputFieldSelection} on:selectionchange={resetInputFieldSelection}
+		       id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 	</div>
 {/if}
 
@@ -85,13 +92,13 @@
 	<div id="text">
 		{#each $text as character, index (character + index)}
 			<span class:cursor={$cursorPosition === index && cursorActive}
-			      class:correct={$characterStates[index] === TypingGame.CharacterState.Correct}
-			      class:incorrect={$characterStates[index] === TypingGame.CharacterState.Incorrect}
+			      class:correct={$characterStates[index] === CharacterState.Correct}
+			      class:incorrect={$characterStates[index] === CharacterState.Incorrect}
 			      class:corrected={$correctedMistakePositions.includes(index)}>{character}</span>
 		{/each}
 	</div>
 
-	{#if $gameState === TypingGame.GameState.Ended}
+	{#if $gameState === GameState.Finished}
 		<div id="game-over" transition:slide>
 			<div id="result">
 				<div class="result-item">
@@ -115,7 +122,7 @@
 				</div>
 			</div>
 
-			<a on:click={restartGame} id="restart">
+			<a on:click={() => typingGame.reset()} id="restart">
 				<svg xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24" height="30" width="30">
 					<path d="M7 9H0V2h1v5.2C2.853 2.963 7.083 0 12 0c6.623 0 12 5.377 12 12s-5.377 12-12 12C5.714 24 .55 19.156.041 13h1.004C1.551 18.603 6.266 23 12 23c6.071 0 11-4.929 11-11S18.071 1 12 1C7.34 1 3.353 3.904 1.751 8H7v1z" />
 				</svg>
@@ -175,8 +182,8 @@
 
 	#hidden-form {
 		position: fixed;
-		top:      -100vh;
-		left:     -100vw;
+		top:      0;
+		left:     0;
 	}
 
 	#game {
