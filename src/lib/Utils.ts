@@ -111,8 +111,8 @@ export class Utils {
 	 * @param to - The new string.
 	 */
 	public static findDifferences(from: string, to: string): Differences {
-		let fromArr = [ ...from ];
-		let toArr = [ ...to ];
+		let fromArr: (string | null)[] = [ ...from ];
+		let toArr: (string | null)[] = [ ...to ];
 
 		if (fromArr.length > toArr.length) {
 			// Add nulls to toArr until it has the same length as fromArr

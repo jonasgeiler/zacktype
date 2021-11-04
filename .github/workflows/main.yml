@@ -25,6 +25,9 @@ jobs:
           version: 6.16.0
           run_install: true
 
+      - name: Check 🔎
+        run: pnpm run check
+
       - name: Test ✅
         run: pnpm run test
 

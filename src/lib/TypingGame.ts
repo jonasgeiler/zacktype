@@ -112,7 +112,7 @@ export class TypingGame {
 
 				set(characterStates);
 			},
-			[],
+			[] as CharacterState[],
 		);
 
 		// Init gameState store, a derived store which compares text and inputText to determine current game state
