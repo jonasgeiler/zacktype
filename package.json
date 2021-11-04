@@ -31,8 +31,5 @@
 		"vite-plugin-pwa": "^0.11.3",
 		"vite-tsconfig-paths": "^3.3.17",
 		"workbox-window": "^6.3.0"
-	},
-	"dependencies": {
-		"nanostores": "^0.5.4"
 	}
 }
