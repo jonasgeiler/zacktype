@@ -41,7 +41,11 @@
 	}
 
 	inputText.subscribe(text => {
-		if (text) resetCursorBlink(); // Reset cursor blink when inputText was updated
+		if (text) {
+			resetCursorBlink(); // Reset cursor blink when inputText was updated
+
+			if (inputField) inputField.setSelectionRange(text.length, text.length); // Move cursor to end of input, just in case
+		}
 	});
 
 	onMount(() => {
