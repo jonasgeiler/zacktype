@@ -182,8 +182,8 @@
 
 	#hidden-form {
 		position: fixed;
-		top:      0;
-		left:     0;
+		top:      -100vh;
+		left:     -100vw;
 	}
 
 	#game {
