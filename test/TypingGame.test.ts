@@ -1,6 +1,6 @@
 import { CharacterState, GameState, TypingGame } from '$lib/TypingGame';
-import { get, Writable } from 'svelte/store';
 import type { Readable } from 'svelte/store';
+import { get, Writable } from 'svelte/store';
 
 function expectReadable<T extends any>(store: Readable<T>, expectValue?: T) {
 	expect(store).toHaveProperty('subscribe');
@@ -238,19 +238,19 @@ describe('TypingGame', () => {
 		expect(get(totalTypedCharacters)).toEqual(3); // Wrong character should also increase totalTypedCharacters
 
 		inputText.set('Hel'); // Immediately replace the last character
-		expect(get(totalTypedCharacters)).toEqual(3); // Replacing characters should also increase totalTypedCharacters
+		expect(get(totalTypedCharacters)).toEqual(4); // Replacing characters should also increase totalTypedCharacters
 
 		inputText.set('Hello '); // Add multiple characters at once
-		expect(get(totalTypedCharacters)).toEqual(4); // All new characters should also increase totalTypedCharacters
+		expect(get(totalTypedCharacters)).toEqual(7); // All new characters should also increase totalTypedCharacters
 
 		inputText.set('Hell'); // Remove some characters
-		expect(get(totalTypedCharacters)).toEqual(4); // Removing characters shouldn't affect totalTypedCharacters
+		expect(get(totalTypedCharacters)).toEqual(7); // Removing characters shouldn't affect totalTypedCharacters
 
 		inputText.set('Hello World!'); // Finish typing
-		expect(get(totalTypedCharacters)).toEqual(14); // At the end it should be 14 characters
+		expect(get(totalTypedCharacters)).toEqual(15); // At the end it should be 14 characters
 
 		inputText.set('Hello World!?'); // Add character, even though the game ended
-		expect(get(totalTypedCharacters)).toEqual(14); // Inserting character after game was finished shouldn't affect totalTypedCharacters
+		expect(get(totalTypedCharacters)).toEqual(15); // Inserting character after game was finished shouldn't affect totalTypedCharacters
 
 		tg.reset();
 

@@ -1,16 +1,22 @@
 import type { Readable, Unsubscriber, Writable } from 'svelte/store';
 
-/** List of Readable stores. */
+/** List of Readable stores */
 type Stores = [ Readable<any>, ...Array<Readable<any>> ] | Array<Readable<any>>;
 
-/** Values from a list of Readable stores. */
+/** Values from a list of Readable stores */
 type StoresValues<T> = {
 	[K in keyof T]: T[K] extends Readable<infer U> ? U : never;
 };
 
+/** Object describing all differences between two strings */
 interface Differences {
+	/** Indices of added characters */
 	readonly added: number[];
+
+	/** Indices of removed characters */
 	readonly removed: number[];
+
+	/** Indices of changed characters */
 	readonly changed: number[];
 }
 
@@ -38,7 +44,7 @@ export class Utils {
 	 * @param callback - Callback that is called with the store values each time one of stores was updated.
 	 */
 	public static subscribeAll<S extends Stores>(stores: S, callback: (values: StoresValues<S>) => Unsubscriber | void): Unsubscriber {
-		// Most of the logic was taken from the derived function `svelte/stores`
+		// Most of the logic was taken from the derived function in `svelte/stores`
 
 		let initiated = false; // This prevents sync before all stores where subscribed
 		let values = new Array(stores.length);
@@ -82,7 +88,7 @@ export class Utils {
 	}
 
 	/**
-	 * Convert a writable store to a readable store
+	 * Convert a writable store to a readable store.
 	 * @param writable
 	 */
 	public static makeReadable<T extends any>(writable: Writable<T>): Readable<T> {
