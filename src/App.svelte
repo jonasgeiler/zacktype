@@ -154,16 +154,16 @@
 	}
 
 	body {
-		height:                  100%;
-		width:                   100%;
-		padding:                 0;
-		margin:                  0;
 		font-family:             var(--font-family);
 		font-weight:             400;
+		width:                   100%;
+		height:                  100%;
+		margin:                  0;
+		padding:                 0;
+		color:                   var(--primary-text-color);
+		background-color:        var(--background-color);
 		-webkit-font-smoothing:  antialiased;
 		-moz-osx-font-smoothing: grayscale;
-		background-color:        var(--background-color);
-		color:                   var(--primary-text-color);
 	}
 
 	* {
@@ -171,11 +171,11 @@
 	}
 
 	#app {
-		min-height:         100vh;
 		display:            flex;
-		justify-content:    center;
-		align-items:        center;
 		overflow-y:         auto;
+		align-items:        center;
+		justify-content:    center;
+		min-height:         100vh;
 		scrollbar-width:    none;
 		-ms-overflow-style: none;
 	}
@@ -187,25 +187,25 @@
 	}
 
 	#game {
-		max-width:       600px;
-		width:           100%;
-		margin:          2rem 1rem;
 		display:         flex;
+		align-items:     center;
 		flex-direction:  column;
 		justify-content: center;
-		align-items:     center;
+		width:           100%;
+		max-width:       600px;
+		margin:          2rem 1rem;
 	}
 
 	#text {
 		font-size:   24px;
-		white-space: pre-wrap;
-		user-select: none;
 		cursor:      text;
+		user-select: none;
+		white-space: pre-wrap;
 	}
 
 	#text .cursor {
-		background-color: var(--primary-text-color);
 		color:            var(--background-color);
+		background-color: var(--primary-text-color);
 	}
 
 	#text .correct {
@@ -213,8 +213,8 @@
 	}
 
 	#text .incorrect {
-		background-color: var(--incorrect-character-color);
 		color:            var(--primary-text-color);
+		background-color: var(--incorrect-character-color);
 	}
 
 	#text .corrected {
@@ -222,33 +222,33 @@
 	}
 
 	#game-over {
-		width:           100%;
-		margin-top:      2rem;
 		display:         flex;
+		align-items:     center;
 		flex-direction:  column;
 		justify-content: center;
-		align-items:     center;
+		width:           100%;
+		margin-top:      2rem;
 	}
 
 	#result {
-		width:           100%;
 		display:         flex;
+		align-items:     center;
 		flex-wrap:       wrap;
 		justify-content: space-around;
-		align-items:     center;
+		width:           100%;
 	}
 
 	.result-item {
 		display:         flex;
+		align-items:     center;
 		flex-direction:  column;
 		justify-content: center;
-		align-items:     center;
 		margin-bottom:   10px;
 	}
 
 	.result-item {
-		margin-left:  20px;
 		margin-right: 20px;
+		margin-left:  20px;
 	}
 
 	.result-value {
@@ -261,10 +261,10 @@
 	}
 
 	#restart {
-		margin-top:  2rem;
 		font-size:   16px;
-		fill:        var(--secondary-text-color);
+		margin-top:  2rem;
 		cursor:      pointer;
 		user-select: none;
+		fill:        var(--secondary-text-color);
 	}
 </style>

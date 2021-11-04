@@ -1,6 +1,6 @@
 import { CharacterState, GameState, TypingGame } from '$lib/TypingGame';
-import { get } from 'svelte/store';
 import type { Readable, Writable } from 'svelte/store';
+import { get } from 'svelte/store';
 
 /** Shorthand for getting store value */
 const $ = get;
