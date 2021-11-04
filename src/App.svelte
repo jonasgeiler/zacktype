@@ -77,8 +77,7 @@
 	});
 
 	onMount(() => {
-		// Start cursor blinking
-		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval);
+		cursorTimeoutId = window.setTimeout(makeCursorBlink, cursorBlinkInterval); // Start cursor blinking
 
 		focusInputField(); // Focus the hidden input field initially
 		window.addEventListener('click', focusInputField); // If user clicked anywhere it should focus the hidden input field
@@ -259,24 +258,21 @@
 		width:           100%;
 	}
 
-	.result-item {
+	#result .result-item {
 		display:         flex;
 		align-items:     center;
 		flex-direction:  column;
 		justify-content: center;
-		margin-bottom:   10px;
-	}
-
-	.result-item {
+		margin-bottom:   20px;
 		margin-right: 20px;
 		margin-left:  20px;
 	}
 
-	.result-value {
+	#result .result-item .result-value {
 		font-size: 48px;
 	}
 
-	.result-description {
+	#result .result-item .result-description {
 		font-size: 18px;
 		color:     var(--secondary-text-color);
 	}
