@@ -75,7 +75,7 @@ describe('TypingGame', () => {
 
 		tg.reset();
 
-		expect(get(inputText)).toEqual('');
+		expect(get(inputText)).toEqual(''); // Should be empty again after reset
 	});
 
 	test('using characterStates store', () => {
@@ -85,37 +85,37 @@ describe('TypingGame', () => {
 		// Shorthands
 		const none = CharacterState.None;
 		const correct = CharacterState.Correct;
-		const wrong = CharacterState.Incorrect;
+		const incorrect = CharacterState.Incorrect;
 
-		expectReadable<CharacterState[]>(characterStates, expect.arrayContaining([ none, none, none ]));
+		expectReadable<CharacterState[]>(characterStates, [ none, none, none ]);
 
 		inputText.set(''); // Set inputText to empty string
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ none, none, none ])); // Shouldn't be changed
+		expect(get(characterStates)).toEqual([ none, none, none ]); // Shouldn't be changed
 
 		inputText.set('h'); // Insert first character
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, none, none ]));
+		expect(get(characterStates)).toEqual([ correct, none, none ]);
 
 		inputText.set('hi'); // Insert wrong character
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, wrong, none ]));
+		expect(get(characterStates)).toEqual([ correct, incorrect, none ]);
 
 		inputText.set('h'); // Remove wrong character
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, none, none ]));
+		expect(get(characterStates)).toEqual([ correct, none, none ]);
 
 		inputText.set('he'); // Insert second character
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, correct, none ]));
+		expect(get(characterStates)).toEqual([ correct, correct, none ]);
 
 		inputText.set('hey'); // Insert last character, so game ends
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, correct, correct ])); // All should be correct at the end
+		expect(get(characterStates)).toEqual([ correct, correct, correct ]); // All should be correct at the end
 
 		inputText.set('hey!'); // Insert character, although the game ended
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, correct, correct ])); // Inserting a character when the game ended should be ignored
+		expect(get(characterStates)).toEqual([ correct, correct, correct ]); // Inserting a character when the game ended should be ignored
 
 		inputText.set('hey'); // Remove last character, although the game ended
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ correct, correct, correct ])); // Removing a character when the game ended should be ignored
+		expect(get(characterStates)).toEqual([ correct, correct, correct ]); // Removing a character when the game ended should be ignored
 
 		tg.reset();
 
-		expect(get(characterStates)).toEqual(expect.arrayContaining([ none, none, none ])); // Should have been reset
+		expect(get(characterStates)).toEqual([ none, none, none ]); // Should have been reset
 	});
 
 	test('using gameState store', () => {
@@ -143,105 +143,118 @@ describe('TypingGame', () => {
 
 		tg.reset();
 
-		expect(get(gameState)).toEqual(GameState.Idle); // gameState should go back to idle on reset
+		expect(get(gameState)).toEqual(GameState.Idle); // gameState should go back to idle after reset
 	});
 
 	// Here we test two stores at once, because "mistakes" is just the length of mistakePositions
 	test('using mistakePositions and mistakes stores', () => {
 		const tg = new TypingGame('Hello World!');
-		const { mistakePositions, mistakes } = tg;
+		const { mistakePositions, mistakes, inputText } = tg;
 
-		expectReadable<number[]>(mistakePositions, expect.arrayContaining([]));
+		expectReadable<number[]>(mistakePositions, []);
 		expectReadable<number>(mistakes, 0);
 
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([]));
-		expect(get(mistakes)).toEqual(0);
-		tg.insert('H');
-		tg.insert('i'); // Wrong character
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([ 1 ])); // Contains mistake
+		inputText.set('Hi'); // Insert wrong character
+		expect(get(mistakePositions)).toEqual([ 1 ]); // Contains first mistake
 		expect(get(mistakes)).toEqual(1); // One mistake
-		tg.backspace(); // Remove wrong character
-		tg.insert('e'); // Insert right character
-		tg.insert('l');
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([ 1 ])); // Shouldn't change
+
+		inputText.set('He'); // Replace with right character
+		expect(get(mistakePositions)).toEqual([ 1 ]); // Shouldn't change
 		expect(get(mistakes)).toEqual(1); // Still one mistake
-		tg.insert('o'); // Wrong character
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([ 1, 3 ])); // Another mistake
+
+		inputText.set('Hey'); // Insert another wrong character
+		expect(get(mistakePositions)).toEqual([ 1, 2 ]); // Contains all mistakes
 		expect(get(mistakes)).toEqual(2); // Two mistakes
-		tg.insert('k'); // Wrong character
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([ 1, 3, 4 ])); // ANOTHER mistake
+
+		inputText.set('Hey!'); // Insert another mistake
+		expect(get(mistakePositions)).toEqual([ 1, 2, 4 ]); // Contains all mistakes
 		expect(get(mistakes)).toEqual(3); // Three mistakes
-		tg.backspace(); // Remove k
-		tg.backspace(); // Remove o
-		for (let char of text.substr(3)) {
-			tg.insert(char); // Insert remaining characters
-		}
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([ 1, 3, 4 ])); // Should be the same mistakes at the end
+
+		inputText.set('Hello World!'); // Finish typing
+		expect(get(mistakePositions)).toEqual([ 1, 2, 4 ]); // Should be the same mistakes at the end
 		expect(get(mistakes)).toEqual(3); // Still three mistakes
-		tg.insert('r'); // Insert wrong character, even though we're at the end
-		expect(get(mistakePositions)).toEqual(expect.arrayContaining([ 1, 3, 4 ])); // Inserting wrong characters at the end shouldn't affect mistakePositions
+
+		inputText.set('Hello World?'); // Replace last character with a wrong character, even though the game ended
+		expect(get(mistakePositions)).toEqual([ 1, 2, 4 ]); // Updating inputText when the game ended should be ignored
 		expect(get(mistakes)).toEqual(3); // Still three mistakes
+
+		tg.reset();
+
+		expect(get(mistakePositions)).toEqual([]); // Should be empty after reset
+		expect(get(mistakes)).toEqual(0); // Should be zero after reset
 	});
 
-	test('correctedMistakePositions contains all corrected mistake positions', () => {
-		const tg = new TypingGame({
-			text: 'Hello World!',
-		});
-		const { correctedMistakePositions } = tg.getStores();
+	test('using correctedMistakePositions store', () => {
+		const tg = new TypingGame('Hello World!');
+		const { correctedMistakePositions, inputText } = tg;
 
-		expectReadable<number[]>(correctedMistakePositions, expect.arrayContaining([]));
+		expectReadable<number[]>(correctedMistakePositions, []);
 
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([]));
-		tg.insert('H');
-		tg.insert('i'); // Wrong character
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([]));
-		tg.backspace(); // Remove wrong character
-		tg.insert('e'); // Insert right character
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([ 1 ]));
-		tg.backspace(); // Remove right character again
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([ 1 ]));
-		tg.insert('e'); // Insert right character again
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([ 1 ]));
-		tg.insert('l');
-		tg.insert('o'); // Wrong character
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([ 1 ]));
-		tg.backspace(); // Remove wrong character
-		tg.insert('l'); // Insert right character
-		expect(get(correctedMistakePositions)).toEqual(expect.arrayContaining([ 1, 3 ]));
+		inputText.set('Hi'); // Insert wrong character
+		expect(get(correctedMistakePositions)).toEqual([]); // Should not contain anything (yet)
+
+		inputText.set('He'); // Replace with right character
+		expect(get(correctedMistakePositions)).toEqual([ 1 ]); // Should contain the corrected character position
+
+		inputText.set('H'); // Remove right character again
+		expect(get(correctedMistakePositions)).toEqual([ 1 ]); // Should still contain the corrected character position
+
+		inputText.set('He'); // Add right character again
+		expect(get(correctedMistakePositions)).toEqual([ 1 ]); // Shouldn't be affected
+
+		inputText.set('Helo'); // Insert another wrong character
+		expect(get(correctedMistakePositions)).toEqual([ 1 ]);
+
+		inputText.set('Hell'); // Replace with right character
+		expect(get(correctedMistakePositions)).toEqual([ 1, 3 ]); // Should contain the other corrected character position
+
+		inputText.set('Hello World!'); // Finish typing
+		expect(get(correctedMistakePositions)).toEqual([ 1, 3 ]); // Should be the same at the end
+
+		inputText.set('Hello World?'); // Replace last character with a wrong character, even though game ended
+		expect(get(correctedMistakePositions)).toEqual([ 1, 3 ]);
+
+		inputText.set('Hello World!'); // Correct the last character again
+		expect(get(correctedMistakePositions)).toEqual([ 1, 3 ]); // Correcting characters should be ignored when game ended
+
+		tg.reset();
+
+		expect(get(correctedMistakePositions)).toEqual([]); // Should be empty after reset
 	});
 
-	test('totalTypedCharacters contains the amount of typed characters', () => {
-		const text = 'Hello World!';
-		const tg = new TypingGame({
-			text,
-		});
-		const { totalTypedCharacters } = tg.getStores();
+	test('using totalTypedCharacters store', () => {
+		const tg = new TypingGame('Hello World!');
+		const { totalTypedCharacters, inputText } = tg;
 
 		expectReadable<number>(totalTypedCharacters, 0);
 
-		expect(get(totalTypedCharacters)).toEqual(0);
-		tg.insert('H');
+		inputText.set('H'); // Add first character
 		expect(get(totalTypedCharacters)).toEqual(1);
-		tg.insert('e');
+
+		inputText.set('He'); // Add second character
 		expect(get(totalTypedCharacters)).toEqual(2);
-		tg.insert('f'); // Wrong character
+
+		inputText.set('Hey'); // Add wrong character
 		expect(get(totalTypedCharacters)).toEqual(3); // Wrong character should also increase totalTypedCharacters
-		tg.insert(' '); // Space
-		expect(get(totalTypedCharacters)).toEqual(4); // Space should also increase typeCharacters
-		tg.backspace(); // Remove space
-		tg.backspace(); // Remove wrong character
+
+		inputText.set('Hel'); // Immediately replace the last character
+		expect(get(totalTypedCharacters)).toEqual(3); // Replacing characters should also increase totalTypedCharacters
+
+		inputText.set('Hello '); // Add multiple characters at once
+		expect(get(totalTypedCharacters)).toEqual(4); // All new characters should also increase totalTypedCharacters
+
+		inputText.set('Hell'); // Remove some characters
 		expect(get(totalTypedCharacters)).toEqual(4); // Removing characters shouldn't affect totalTypedCharacters
-		tg.insert('l');
-		tg.insert('l');
-		expect(get(totalTypedCharacters)).toEqual(6);
-		for (let char of text.substr(4)) {
-			tg.insert(char); // Insert the rest of the characters
-		}
+
+		inputText.set('Hello World!'); // Finish typing
 		expect(get(totalTypedCharacters)).toEqual(14); // At the end it should be 14 characters
-		tg.insert('s'); // Insert character, even though we're finished
+
+		inputText.set('Hello World!?'); // Add character, even though the game ended
 		expect(get(totalTypedCharacters)).toEqual(14); // Inserting character after game was finished shouldn't affect totalTypedCharacters
-		tg.backspace(); // Remove last character
-		expect(get(totalTypedCharacters)).toEqual(14); // Removing the last character shouldn't affect totalTypedCharacters
+
+		tg.reset();
+
+		expect(get(totalTypedCharacters)).toEqual(0); // Should be back to zero after reset
 	});
 
 	test('startTime contains the time when user started typing', async () => {
