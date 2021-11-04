@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { CharacterState, GameState, TypingGame } from '$lib/TypingGame';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { slide } from 'svelte/transition';
 
 	const typingGame = new TypingGame();
@@ -60,9 +60,20 @@
 		hiddenInput.setSelectionRange(hiddenInput.value.length, hiddenInput.value.length); // Move cursor to end of input
 	}
 
-	// Support to inputText changes
+	// Subscribe to inputText changes
 	inputText.subscribe(text => {
 		if (text) resetCursorBlink(); // Reset cursor blink when inputText was updated
+	});
+
+	// Subscribe to cursorPosition changes
+	cursorPosition.subscribe(() => {
+		// Wait for next tick (until cursor position updates in UI)
+		tick().then(() => {
+			// Loop through all cursor elements (there should only be one)
+			for (let cursor of document.getElementsByClassName('cursor')) {
+				cursor.scrollIntoView({ block: 'center' }); // Scroll cursor element into center of view
+			}
+		});
 	});
 
 	onMount(() => {
@@ -135,8 +146,8 @@
 	:root {
 		--font-family:               ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 		--background-color:          #171717;
-		--primary-text-color:        #e0e0e0;
-		--secondary-text-color:      #7f7f7f;
+		--primary-text-color:        #fff;
+		--secondary-text-color:      #818181;
 		--correct-character-color:   #03a9f4;
 		--incorrect-character-color: #f44336;
 		--corrected-character-color: #f4433633;
