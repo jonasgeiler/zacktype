@@ -1,5 +1,5 @@
 <script lang="ts">
-	import TypingGame from '$lib/TypingGame';
+	import { CharacterState, GameState, TypingGame } from '$lib/TypingGame';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 
@@ -9,20 +9,33 @@
 		text,
 		inputText,
 		characterStates,
-		cursorPosition,
 		gameState,
-		wpm,
-		cps,
-		accuracy,
-		mistakes,
+		cursorPosition,
 		correctedMistakePositions,
-	} = typingGame.getStores();
+
+		totalTypedCharacters,
+		startTime,
+		endTime,
+		mistakePositions,
+	} = typingGame;
 
 	let inputField: HTMLInputElement;
 
 	const cursorBlinkTimeout = 500;
 	let cursorTimeoutId: number;
 	let cursorActive: boolean;
+
+	$: debug = JSON.stringify({
+		inputText: $inputText,
+		//characterStates:           $characterStates,
+		gameState:                 $gameState,
+		cursorPosition:            $cursorPosition,
+		correctedMistakePositions: $correctedMistakePositions,
+		totalTypedCharacters:      $totalTypedCharacters,
+		startTime:                 $startTime,
+		endTime:                   $endTime,
+		mistakePositions:          $mistakePositions,
+	}, null, 2);
 
 	function cursorBlink() {
 		cursorActive = !cursorActive;
@@ -35,31 +48,14 @@
 		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
 	}
 
-	function handleInput(event: InputEvent) {
-		switch (event.inputType) {
-			case 'insertText':
-				typingGame.insert(event.data);
-				resetCursorBlink();
-				break;
-
-			case 'deleteContentBackward':
-				typingGame.backspace();
-				resetCursorBlink();
-				break;
-
-			default:
-				inputField.value = inputText.get();
-		}
-	}
-
 	function focusInputField() {
-		if (!inputField || gameState.get() == TypingGame.GameState.Ended) return;
+		if (!inputField || $gameState == GameState.Finished) return;
 		inputField.focus();
 	}
 
-	function restartGame() {
-		typingGame.reset();
-	}
+	inputText.subscribe(text => {
+		if (text) resetCursorBlink(); // Reset cursor blink when inputText was updated
+	});
 
 	onMount(() => {
 		cursorTimeoutId = window.setTimeout(cursorBlink, cursorBlinkTimeout);
@@ -74,48 +70,50 @@
 	});
 </script>
 
-{#if $gameState !== TypingGame.GameState.Ended}
+{#if $gameState !== GameState.Finished}
 	<div id="hidden-form">
 		<label for="input-field">Type here</label>
-		<input bind:this={inputField} value={$inputText} on:input={handleInput} id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+		<input bind:this={inputField} bind:value={$inputText} id="input-field" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
 	</div>
 {/if}
+
+<pre style="position: absolute; top: 0; left: 0"><code>{debug}</code></pre>
 
 <div id="game">
 	<div id="text">
 		{#each $text as character, index (character + index)}
 			<span class:cursor={$cursorPosition === index && cursorActive}
-			      class:correct={$characterStates[index] === TypingGame.CharacterState.Correct}
-			      class:incorrect={$characterStates[index] === TypingGame.CharacterState.Incorrect}
+			      class:correct={$characterStates[index] === CharacterState.Correct}
+			      class:incorrect={$characterStates[index] === CharacterState.Incorrect}
 			      class:corrected={$correctedMistakePositions.includes(index)}>{character}</span>
 		{/each}
 	</div>
 
-	{#if $gameState === TypingGame.GameState.Ended}
+	{#if $gameState === GameState.Finished}
 		<div id="game-over" transition:slide>
 			<div id="result">
 				<div class="result-item">
-					<span class="result-value">{$cps}</span>
+					<span class="result-value">{0}</span>
 					<span class="result-description">chars/sec</span>
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{$wpm}</span>
+					<span class="result-value">{0}</span>
 					<span class="result-description">words/min</span>
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{$accuracy}%</span>
+					<span class="result-value">{0}%</span>
 					<span class="result-description">accuracy</span>
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{$mistakes}</span>
+					<span class="result-value">{0}</span>
 					<span class="result-description">mistakes</span>
 				</div>
 			</div>
 
-			<a on:click={restartGame} id="restart">
+			<a on:click={() => typingGame.reset()} id="restart">
 				<svg xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24" height="30" width="30">
 					<path d="M7 9H0V2h1v5.2C2.853 2.963 7.083 0 12 0c6.623 0 12 5.377 12 12s-5.377 12-12 12C5.714 24 .55 19.156.041 13h1.004C1.551 18.603 6.266 23 12 23c6.071 0 11-4.929 11-11S18.071 1 12 1C7.34 1 3.353 3.904 1.751 8H7v1z" />
 				</svg>
