@@ -3,12 +3,14 @@ import type { Readable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 import { TextGenerator } from './TextGenerator';
 
+/** State of a character */
 export enum CharacterState {
 	None,
 	Correct,
 	Incorrect
 }
 
+/** State of the game */
 export enum GameState {
 	Idle,
 	Started,

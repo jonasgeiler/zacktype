@@ -12,11 +12,10 @@
 		gameState,
 		cursorPosition,
 		correctedMistakePositions,
-
-		totalTypedCharacters,
-		startTime,
-		endTime,
-		mistakePositions,
+		wpm,
+		cps,
+		accuracy,
+		mistakes,
 	} = typingGame;
 
 	let inputField: HTMLInputElement;
@@ -24,18 +23,6 @@
 	const cursorBlinkTimeout = 500;
 	let cursorTimeoutId: number;
 	let cursorActive: boolean;
-
-	$: debug = JSON.stringify({
-		inputText: $inputText,
-		//characterStates:           $characterStates,
-		gameState:                 $gameState,
-		cursorPosition:            $cursorPosition,
-		correctedMistakePositions: $correctedMistakePositions,
-		totalTypedCharacters:      $totalTypedCharacters,
-		startTime:                 $startTime,
-		endTime:                   $endTime,
-		mistakePositions:          $mistakePositions,
-	}, null, 2);
 
 	function cursorBlink() {
 		cursorActive = !cursorActive;
@@ -77,8 +64,6 @@
 	</div>
 {/if}
 
-<pre style="position: absolute; top: 0; left: 0"><code>{debug}</code></pre>
-
 <div id="game">
 	<div id="text">
 		{#each $text as character, index (character + index)}
@@ -93,22 +78,22 @@
 		<div id="game-over" transition:slide>
 			<div id="result">
 				<div class="result-item">
-					<span class="result-value">{0}</span>
+					<span class="result-value">{$cps}</span>
 					<span class="result-description">chars/sec</span>
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{0}</span>
+					<span class="result-value">{$wpm}</span>
 					<span class="result-description">words/min</span>
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{0}%</span>
+					<span class="result-value">{$accuracy}%</span>
 					<span class="result-description">accuracy</span>
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{0}</span>
+					<span class="result-value">{$mistakes}</span>
 					<span class="result-description">mistakes</span>
 				</div>
 			</div>
