@@ -1,5 +1,4 @@
 const { pathsToModuleNameMapper } = require('ts-jest/utils');
-const { compilerOptions } = require('./tsconfig.json');
 
 const esModules = [ 'nanostores' ].join('|');
 
@@ -16,6 +15,9 @@ module.exports = {
 	},
 	transformIgnorePatterns: [ `/node_modules/(?!.*${esModules})` ],
 	moduleFileExtensions:    [ 'js', 'ts', 'svelte' ],
-	moduleNameMapper:        pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+	moduleNameMapper:        pathsToModuleNameMapper({
+		'$lib':   [ 'src/lib' ],
+		'$lib/*': [ 'src/lib/*' ],
+	}, { prefix: '<rootDir>/' }),
 	testEnvironment:         'jsdom',
 };
