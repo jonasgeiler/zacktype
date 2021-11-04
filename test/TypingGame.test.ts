@@ -290,7 +290,7 @@ test('startTime store', async () => {
 	expect($(startTime)).toBeLessThanOrEqual(firstCharTimeEnd);
 
 	inputText.set('He'); // Insert second character
-	await wait(1000); // Wait a second
+	await wait(500); // Wait half a second
 
 	// Adding more characters shouldn't affect startTime
 	expect($(startTime)).toBeGreaterThanOrEqual(firstCharTimeStart);
@@ -316,6 +316,11 @@ test('endTime store', async () => {
 	inputText.set('H'); // Insert first character
 	expect($(endTime)).toBeNull(); // Inserting the first character shouldn't affect endTime
 
+	inputText.set('He'); // Insert second character
+	await wait(500); // Wait half a second
+
+	expect($(endTime)).toBeNull(); // Inserting the first character shouldn't affect endTime
+
 	inputText.set('Hello World'); // Insert all characters except the last one
 	expect($(endTime)).toBeNull(); // User didn't finished typing yet, so no endTime
 
@@ -323,6 +328,12 @@ test('endTime store', async () => {
 	inputText.set('Hello World!'); // Insert last character
 	const lastCharTimeEnd = Date.now(); // Store time after inserting last character
 
+	expect($(endTime)).toBeGreaterThanOrEqual(lastCharTimeStart);
+	expect($(endTime)).toBeLessThanOrEqual(lastCharTimeEnd);
+
+	inputText.set(''); // Remove all characters
+
+	// Removing all characters again shouldn't affect startTime
 	expect($(endTime)).toBeGreaterThanOrEqual(lastCharTimeStart);
 	expect($(endTime)).toBeLessThanOrEqual(lastCharTimeEnd);
 
