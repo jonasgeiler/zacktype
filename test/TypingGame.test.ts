@@ -97,46 +97,6 @@ test('inputText store', () => {
 	expect($(inputText)).toEqual(''); // Should be empty again after reset
 });
 
-test('characterStates store', () => {
-	const tg = new TypingGame('hey');
-	const { characterStates, inputText } = tg;
-
-	// Shorthands
-	const none = CharacterState.None;
-	const correct = CharacterState.Correct;
-	const incorrect = CharacterState.Incorrect;
-
-	expectReadable<CharacterState[]>(characterStates, [ none, none, none ]);
-
-	inputText.set(''); // Set inputText to empty string
-	expect($(characterStates)).toEqual([ none, none, none ]); // Shouldn't be changed
-
-	inputText.set('h'); // Insert first character
-	expect($(characterStates)).toEqual([ correct, none, none ]);
-
-	inputText.set('hi'); // Insert wrong character
-	expect($(characterStates)).toEqual([ correct, incorrect, none ]);
-
-	inputText.set('h'); // Remove wrong character
-	expect($(characterStates)).toEqual([ correct, none, none ]);
-
-	inputText.set('he'); // Insert second character
-	expect($(characterStates)).toEqual([ correct, correct, none ]);
-
-	inputText.set('hey'); // Insert last character, so game ends
-	expect($(characterStates)).toEqual([ correct, correct, correct ]); // All should be correct at the end
-
-	inputText.set('hey!'); // Insert character, although the game ended
-	expect($(characterStates)).toEqual([ correct, correct, correct ]); // Inserting a character when the game ended should be ignored
-
-	inputText.set('hey'); // Remove last character, although the game ended
-	expect($(characterStates)).toEqual([ correct, correct, correct ]); // Removing a character when the game ended should be ignored
-
-	tg.reset();
-
-	expect($(characterStates)).toEqual([ none, none, none ]); // Should have been reset
-});
-
 test('gameState store', () => {
 	const tg = new TypingGame('Hello World!');
 	const { gameState, inputText } = tg;
@@ -165,80 +125,116 @@ test('gameState store', () => {
 	expect($(gameState)).toEqual(GameState.Idle); // gameState should go back to idle after reset
 });
 
-// Here we test two stores at once, because "mistakes" is just the length of mistakePositions
-test('mistakePositions store and mistakes store', () => {
-	const tg = new TypingGame('Hello World!');
-	const { mistakePositions, mistakes, inputText } = tg;
+test('characterStates store', () => {
+	const tg = new TypingGame('hey');
+	const { characterStates, inputText } = tg;
 
-	expectReadable<number[]>(mistakePositions, []);
+	// Shorthands
+	const none = CharacterState.None;
+	const correct = CharacterState.Correct;
+	const incorrect = CharacterState.Incorrect;
+	const corrected = CharacterState.Corrected;
+
+	expectReadable<CharacterState[]>(characterStates, [ none, none, none ]);
+
+	inputText.set(''); // Set inputText to empty string
+	expect($(characterStates)).toEqual([ none, none, none ]); // Shouldn't be changed
+
+	inputText.set('h'); // Insert first character
+	expect($(characterStates)).toEqual([ correct, none, none ]);
+
+	inputText.set('hi'); // Insert wrong character
+	expect($(characterStates)).toEqual([ correct, incorrect, none ]);
+
+	inputText.set('h'); // Remove wrong character
+	expect($(characterStates)).toEqual([ correct, none, none ]);
+
+	inputText.set('he'); // Correct second character
+	expect($(characterStates)).toEqual([ correct, corrected, none ]);
+
+	inputText.set('hey'); // Insert last character, so game ends
+	expect($(characterStates)).toEqual([ correct, corrected, correct ]); // All should be correct/corrected at the end
+
+	inputText.set('hey!'); // Insert character, although the game ended
+	expect($(characterStates)).toEqual([ correct, corrected, correct ]); // Inserting a character when the game ended should be ignored
+
+	inputText.set('hey'); // Remove last character, although the game ended
+	expect($(characterStates)).toEqual([ correct, corrected, correct ]); // Removing a character when the game ended should be ignored
+
+	tg.reset();
+
+	expect($(characterStates)).toEqual([ none, none, none ]); // Should have been reset
+});
+
+// Here we test two stores at once, because "mistakes" is just the length of mistakePositions
+test('mistakes store', () => {
+	const tg = new TypingGame('Hello World!');
+	const { mistakes, inputText } = tg;
+
 	expectReadable<number>(mistakes, 0);
 
 	inputText.set('Hi'); // Insert wrong character
-	expect($(mistakePositions)).toEqual([ 1 ]); // Contains first mistake
 	expect($(mistakes)).toEqual(1); // One mistake
 
 	inputText.set('He'); // Replace with right character
-	expect($(mistakePositions)).toEqual([ 1 ]); // Shouldn't change
-	expect($(mistakes)).toEqual(1); // Still one mistake
+	expect($(mistakes)).toEqual(1); // Shouldn't change
 
 	inputText.set('Hey'); // Insert another wrong character
-	expect($(mistakePositions)).toEqual([ 1, 2 ]); // Contains all mistakes
 	expect($(mistakes)).toEqual(2); // Two mistakes
 
 	inputText.set('Hey!'); // Insert another mistake
-	expect($(mistakePositions)).toEqual([ 1, 2, 3 ]); // Contains all mistakes
 	expect($(mistakes)).toEqual(3); // Three mistakes
 
 	inputText.set('Hello World!'); // Finish typing
-	expect($(mistakePositions)).toEqual([ 1, 2, 3 ]); // Should be the same mistakes at the end
-	expect($(mistakes)).toEqual(3); // Still three mistakes
+	expect($(mistakes)).toEqual(3); // Should be the same amount of mistakes at the end
 
 	inputText.set('Hello World?'); // Replace last character with a wrong character, even though the game ended
-	expect($(mistakePositions)).toEqual([ 1, 2, 3 ]); // Updating inputText when the game ended should be ignored
-	expect($(mistakes)).toEqual(3); // Still three mistakes
+	expect($(mistakes)).toEqual(3); // Updating inputText when the game ended should be ignored
 
 	tg.reset();
 
-	expect($(mistakePositions)).toEqual([]); // Should be empty after reset
 	expect($(mistakes)).toEqual(0); // Should be zero after reset
 });
 
-test('correctedMistakePositions store', () => {
+test('correctedMistakes store', () => {
 	const tg = new TypingGame('Hello World!');
-	const { correctedMistakePositions, inputText } = tg;
+	const { correctedMistakes, inputText } = tg;
 
-	expectReadable<number[]>(correctedMistakePositions, []);
+	expectReadable<number>(correctedMistakes, 0);
 
 	inputText.set('Hi'); // Insert wrong character
-	expect($(correctedMistakePositions)).toEqual([]); // Should not contain anything (yet)
+	expect($(correctedMistakes)).toEqual(0); // Should not have increased (yet)
 
 	inputText.set('He'); // Replace with right character
-	expect($(correctedMistakePositions)).toEqual([ 1 ]); // Should contain the corrected character position
+	expect($(correctedMistakes)).toEqual(1); // Should count the one mistake we corrected
 
 	inputText.set('H'); // Remove right character again
-	expect($(correctedMistakePositions)).toEqual([ 1 ]); // Should still contain the corrected character position
+	expect($(correctedMistakes)).toEqual(0); // Should go back to zero
 
 	inputText.set('He'); // Add right character again
-	expect($(correctedMistakePositions)).toEqual([ 1 ]); // Shouldn't be affected
+	expect($(correctedMistakes)).toEqual(1); // Should increase again
 
 	inputText.set('Helo'); // Insert another wrong character
-	expect($(correctedMistakePositions)).toEqual([ 1 ]);
+	expect($(correctedMistakes)).toEqual(1); // Should not have increased (yet)
 
 	inputText.set('Hell'); // Replace with right character
-	expect($(correctedMistakePositions)).toEqual([ 1, 3 ]); // Should contain the other corrected character position
+	expect($(correctedMistakes)).toEqual(2); // Should count the other mistake we corrected
+
+	inputText.set('Helo'); // Insert wrong character AGAIN
+	expect($(correctedMistakes)).toEqual(1); // Should decrease again
 
 	inputText.set('Hello World!'); // Finish typing
-	expect($(correctedMistakePositions)).toEqual([ 1, 3 ]); // Should be the same at the end
+	expect($(correctedMistakes)).toEqual(2); // At the end we should have two corrected mistakes
 
 	inputText.set('Hello World?'); // Replace last character with a wrong character, even though game ended
-	expect($(correctedMistakePositions)).toEqual([ 1, 3 ]);
+	expect($(correctedMistakes)).toEqual(2); // Replacing characters should be ignored when game ended
 
 	inputText.set('Hello World!'); // Correct the last character again
-	expect($(correctedMistakePositions)).toEqual([ 1, 3 ]); // Correcting characters should be ignored when game ended
+	expect($(correctedMistakes)).toEqual(2); // Correcting characters should be ignored when game ended
 
 	tg.reset();
 
-	expect($(correctedMistakePositions)).toEqual([]); // Should be empty after reset
+	expect($(correctedMistakes)).toEqual(0); // Should be zero after reset
 });
 
 test('totalTypedCharacters store', () => {

@@ -8,10 +8,10 @@
 	const {
 		text,
 		inputText,
-		characterStates,
 		gameState,
+		characterStates,
+		correctedMistakes,
 		cursorPosition,
-		correctedMistakePositions,
 		wpm,
 		cps,
 		accuracy,
@@ -104,7 +104,7 @@
 			<span class:cursor={$cursorPosition === index && cursorActive}
 			      class:correct={$characterStates[index] === CharacterState.Correct}
 			      class:incorrect={$characterStates[index] === CharacterState.Incorrect}
-			      class:corrected={$correctedMistakePositions.includes(index) && $cursorPosition > index}>{character}</span>
+			      class:corrected={$characterStates[index] === CharacterState.Corrected}>{character}</span>
 		{/each}
 	</div>
 
@@ -238,6 +238,7 @@
 	}
 
 	#text .corrected {
+		color: var(--correct-character-color);
 		background-color: var(--corrected-character-color);
 	}
 
@@ -264,8 +265,8 @@
 		flex-direction:  column;
 		justify-content: center;
 		margin-bottom:   20px;
-		margin-right: 20px;
-		margin-left:  20px;
+		margin-right:    20px;
+		margin-left:     20px;
 	}
 
 	#result .result-item .result-value {

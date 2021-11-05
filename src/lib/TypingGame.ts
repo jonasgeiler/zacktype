@@ -1,13 +1,14 @@
-import type { Readable, Writable } from 'svelte/store';
-import { derived, writable } from 'svelte/store';
 import { TextGenerator } from '$lib/TextGenerator';
 import { Utils } from '$lib/Utils';
+import type { Readable, Writable } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 
 /** State of a character */
 export enum CharacterState {
 	None,
 	Correct,
-	Incorrect
+	Incorrect,
+	Corrected
 }
 
 /** State of the game */
@@ -29,20 +30,20 @@ export class TypingGame {
 	/** Current user input */
 	public readonly inputText: Writable<string>;
 
-	/** Holds the current state of all characters in the text */
-	public readonly characterStates: Readable<CharacterState[]>;
-
 	/** Current state of the game */
 	public readonly gameState: Readable<GameState>;
 
+	/** Holds the current state of all characters in the text */
+	public readonly characterStates: Readable<CharacterState[]>;
+
+	/** Amount of mistakes that the user made while typing */
+	public readonly mistakes: Readable<number>;
+
+	/** Amount of mistakes that the user corrected */
+	public readonly correctedMistakes: Readable<number>;
+
 	/** Position of the cursor in the text */
 	public readonly cursorPosition: Readable<number>;
-
-	/** Positions of mistakes that the user made while typing */
-	public readonly mistakePositions: Readable<number[]>;
-
-	/** Positions of mistakes that the user corrected */
-	public readonly correctedMistakePositions: Readable<number[]>;
 
 	/** Total amount of characters typed in by user (not including backspaces) */
 	public readonly totalTypedCharacters: Readable<number>;
@@ -58,9 +59,6 @@ export class TypingGame {
 
 	/** User's characters/second score */
 	public readonly cps: Readable<number>;
-
-	/** Amount of mistakes that the user made while typing */
-	public readonly mistakes: Readable<number>;
 
 	/** Accuracy of the user's typing */
 	public readonly accuracy: Readable<number>;
@@ -80,6 +78,12 @@ export class TypingGame {
 		/** Whether changes to inputText should be ignored */
 		let inputDisabled = false;
 
+		/** Positions of mistakes that the user made while typing (helps keeping track of corrected characters) */
+		let mistakePositions: number[] = [];
+
+		/** Positions of mistakes that the user corrected */
+		let correctedMistakePositions: number[] = [];
+
 
 		// Init text store with a randomly generated text or using the specified one
 		const text = writable(
@@ -91,35 +95,11 @@ export class TypingGame {
 		// Init inputText store with an empty string
 		const inputText = writable('');
 
-		// Init characterStates store, a derived store which loops through text and compares each character with inputText and determines each character's state
-		const characterStates = derived(
-			[ text, inputText ],
-			([ $text, $inputText ], set) => {
-				if (inputDisabled) return;
-
-				let characterStates: CharacterState[] = new Array($text.length); // Init an empty array with the same length as the text
-
-				// Loop through text indices
-				for (let i = 0; i < $text.length; i++) {
-					if (i >= $inputText.length) {
-						characterStates[i] = CharacterState.None; // If index exceeds inputText length, the user hasn't entered the character yet
-					} else if ($inputText[i] === $text[i]) {
-						characterStates[i] = CharacterState.Correct; // If the character at the index is the same in inputText and text then it's considered as correct
-					} else {
-						characterStates[i] = CharacterState.Incorrect; // Otherwise the character is considered as incorrect
-					}
-				}
-
-				set(characterStates);
-			},
-			[] as CharacterState[],
-		);
-
 		// Init gameState store, a derived store which compares text and inputText to determine current game state
 		const gameState = derived(
 			[ text, inputText ],
 			([ $text, $inputText ], set) => {
-				if (inputDisabled) return;
+				if (inputDisabled) return; // Don't update game state if input was disabled
 
 				if ($inputText.length >= $text.length) {
 					set(GameState.Finished); // If inputText has the same length as text the user finished typing
@@ -132,22 +112,84 @@ export class TypingGame {
 			GameState.Idle,
 		);
 
+		// Init characterStates store, a derived store which loops through text and determines each character's state
+		const characterStates = derived(
+			[ text, inputText ],
+			([ $text, $inputText ], set) => {
+				if (inputDisabled) return; // Don't update character states if input was disabled
+
+				let characterStates: CharacterState[] = new Array($text.length); // Init an empty array with the same length as the text
+
+				// Loop through text indices
+				for (let i = 0; i < $text.length; i++) {
+					if (i >= $inputText.length) {
+						characterStates[i] = CharacterState.None; // If index exceeds inputText length, the user hasn't entered the character yet
+					} else if ($inputText[i] === $text[i]) {
+						if (mistakePositions.includes(i)) {
+							characterStates[i] = CharacterState.Corrected; // If the character at the index is the same in inputText and text and also had a mistake before, it's considered as corrected
+						} else {
+							characterStates[i] = CharacterState.Correct; // If the character at the index is the same in inputText and text, it's considered as correct
+						}
+					} else {
+						characterStates[i] = CharacterState.Incorrect; // Otherwise the character is considered as incorrect
+
+						if (!mistakePositions.includes(i)) {
+							mistakePositions.push(i); // If character is incorrect and not already in the list of mistakes, add character position to list of mistakes
+						} else if (correctedMistakePositions.includes(i)) {
+							correctedMistakePositions.splice(i, 1); // If character was corrected before, but is wrong again now, remove it from the list of corrected characters
+						}
+					}
+				}
+
+				set(characterStates);
+			},
+			[] as CharacterState[],
+		);
+
+		// Init mistakes store, a derived store which counts all incorrect and corrected characters in characterStates
+		const mistakes = derived(
+			characterStates,
+			$characterStates => {
+				let mistakes = 0;
+
+				for (let state of $characterStates) {
+					if (state === CharacterState.Incorrect || state === CharacterState.Corrected) { // A corrected character still counts as a mistake
+						mistakes++; // If character state is incorrect or corrected, increase mistake count
+					}
+				}
+
+				return mistakes;
+			},
+			0,
+		);
+
+		// Init correctedMistakes store, a derived store which counts all corrected characters in characterStates
+		const correctedMistakes = derived(
+			characterStates,
+			$characterStates => {
+				let correctedMistakes = 0;
+
+				for (let state of $characterStates) {
+					if (state === CharacterState.Corrected) {
+						correctedMistakes++; // If character state is corrected, increase mistake count
+					}
+				}
+
+				return correctedMistakes;
+			},
+			0,
+		);
+
 		// Init cursorPosition store, a derived store calculated from inputText length
 		const cursorPosition = derived(
 			inputText,
 			($inputText, set) => {
-				if (inputDisabled) return;
+				if (inputDisabled) return; // Don't update cursor position if input was disabled
 
 				set($inputText.length); // Cursor position is always the last position of the inputText
 			},
 			0,
 		);
-
-		// Init mistakePositions store with an empty array
-		const mistakePositions = writable<number[]>([]);
-
-		// Init correctedMistakePositions store with an empty array
-		const correctedMistakePositions = writable<number[]>([]);
 
 		// Init totalTypedCharacters store with 0
 		const totalTypedCharacters = writable(0);
@@ -160,9 +202,9 @@ export class TypingGame {
 
 		// Init wpm store, a derived store which calculates the user's words per minute score from various other stores
 		const wpm = derived(
-			[ mistakePositions, correctedMistakePositions, totalTypedCharacters, startTime, endTime ],
-			([ $mistakePositions, $correctedMistakePositions, $totalTypedCharacters, $startTime, $endTime ]) => {
-				if ($startTime == null) return 0;
+			[ mistakes, correctedMistakes, totalTypedCharacters, startTime, endTime ],
+			([ $mistakes, $correctedMistakes, $totalTypedCharacters, $startTime, $endTime ]) => {
+				if ($startTime == null) return 0; // If startTime hasn't been set yet, we can't calculate WPM
 				if ($endTime == null) $endTime = Date.now(); // If endTime hasn't been set yet, just use current time
 
 				// https://www.speedtypingonline.com/typing-equations
@@ -172,7 +214,7 @@ export class TypingGame {
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const elapsedMinutes = elapsedSeconds / 60; // Convert seconds to minutes
 				const grossWPM = typedWords / elapsedMinutes; // Calculate gross WPM
-				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakePositions.length; // Calculate amount of uncorrected mistakes
+				const uncorrectedMistakes = $mistakes - $correctedMistakes; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedMinutes; // Calculate error rate (errors per minute)
 				const netWPM = grossWPM - errorRate; // Calculate net WPM
 
@@ -183,9 +225,9 @@ export class TypingGame {
 
 		// Init cps store, a derived store which calculates the user's characters per second score from various other stores
 		const cps = derived(
-			[ mistakePositions, correctedMistakePositions, totalTypedCharacters, startTime, endTime ],
-			([ $mistakePositions, $correctedMistakePositions, $totalTypedCharacters, $startTime, $endTime ]) => {
-				if ($startTime == null) return 0;
+			[ mistakes, correctedMistakes, totalTypedCharacters, startTime, endTime ],
+			([ $mistakes, $correctedMistakes, $totalTypedCharacters, $startTime, $endTime ]) => {
+				if ($startTime == null) return 0; // If startTime hasn't been set yet, we can't calculate CPS
 				if ($endTime == null) $endTime = Date.now(); // If endTime hasn't been set yet, just use current time
 
 				// https://www.speedtypingonline.com/typing-equations
@@ -194,7 +236,7 @@ export class TypingGame {
 				const elapsedMilliseconds = $endTime - $startTime; // Calculated elapsed milliseconds
 				const elapsedSeconds = elapsedMilliseconds / 1000; // Convert milliseconds to seconds
 				const grossCPS = $totalTypedCharacters / elapsedSeconds; // Calculate gross CPS
-				const uncorrectedMistakes = $mistakePositions.length - $correctedMistakePositions.length; // Calculate amount of uncorrected mistakes
+				const uncorrectedMistakes = $mistakes - $correctedMistakes; // Calculate amount of uncorrected mistakes
 				const errorRate = uncorrectedMistakes / elapsedSeconds; // Calculate error rate (errors per second)
 				const netCPS = grossCPS - errorRate; // Calculate net CPS
 
@@ -203,20 +245,13 @@ export class TypingGame {
 			0,
 		);
 
-		// Init mistakes store, a derived store from mistakePositions
-		const mistakes = derived(
-			mistakePositions,
-			$mistakePositions => $mistakePositions.length,
-			0,
-		);
-
 		// Init accuracy store, a derived store which calculates the user's typing accuracy from the amount of mistakes and the total amount of typed characters
 		const accuracy = derived(
-			[ mistakePositions, totalTypedCharacters ],
-			([ $mistakePositions, $totalTypedCharacters ]) => {
+			[ mistakes, totalTypedCharacters ],
+			([ $mistakes, $totalTypedCharacters ]) => {
 				if ($totalTypedCharacters === 0) return 0; // If totalTypedCharacters is zero, return zero, to prevent a division by zero
 
-				const charactersTypedWithoutMistakes = ($totalTypedCharacters - $mistakePositions.length); // Calculate the amount of characters typed without mistakes
+				const charactersTypedWithoutMistakes = ($totalTypedCharacters - $mistakes); // Calculate the amount of characters typed without mistakes
 
 				return Math.round((charactersTypedWithoutMistakes / $totalTypedCharacters) * 100); // Calculate accuracy, convert to percent and round
 			},
@@ -227,9 +262,9 @@ export class TypingGame {
 		/** Holds the input text from before it was updated */
 		let oldInputText = '';
 
-		// Subscribe to changes to inputText
+		// Subscribe to changes to inputText and update totalTypedCharacters accordingly
 		inputText.subscribe($inputText => {
-			if (inputDisabled) return;
+			if (inputDisabled) return; // Don't update total amount of typed characters if input was disabled
 
 			// Check if text has changed or got longer
 			if ($inputText.length >= oldInputText.length && $inputText !== oldInputText) {
@@ -241,7 +276,7 @@ export class TypingGame {
 			oldInputText = $inputText;
 		});
 
-		// Subscribe to changes to gameState
+		// Subscribe to changes to gameState and update startTime and endTime accordingly
 		gameState.subscribe($gameState => {
 			if ($gameState === GameState.Started) {
 				startTime.set(Date.now()); // If gameState changes to started, set startTime to current time
@@ -251,38 +286,21 @@ export class TypingGame {
 			}
 		});
 
-		// Subscribe to changes to characterStates, mistakePositions and correctedMistakePositions and update those according to characterStates
-		Utils.subscribeAll(
-			[ characterStates, mistakePositions, correctedMistakePositions ],
-			([ $characterStates, $mistakePositions, $correctedMistakePositions ]) => {
-				// Loop through all text positions
-				for (let pos = 0; pos < $characterStates.length; pos++) {
-					const state = $characterStates[pos]; // Get character state
-
-					if (state === CharacterState.Incorrect && !$mistakePositions.includes(pos)) {
-						mistakePositions.set([ ...$mistakePositions, pos ]); // If character is incorrect and not already in the list of mistakes, add character position to list of mistakes
-					} else if (state === CharacterState.Correct && $mistakePositions.includes(pos) && !$correctedMistakePositions.includes(pos)) {
-						correctedMistakePositions.set([ ...$correctedMistakePositions, pos ]); // If character is correct, but also in mistakePositions, it means the user corrected the mistake - add the character position to list of corrected mistakes, if not already in it
-					}
-				}
-			},
-		);
-
 
 		// Expose inputText store as writable store
 		this.inputText = inputText;
 
 		// Expose all other writable stores as readable stores
 		this.text = Utils.makeReadable(text);
-		this.mistakePositions = Utils.makeReadable(mistakePositions);
-		this.correctedMistakePositions = Utils.makeReadable(correctedMistakePositions);
 		this.totalTypedCharacters = Utils.makeReadable(totalTypedCharacters);
 		this.startTime = Utils.makeReadable(startTime);
 		this.endTime = Utils.makeReadable(endTime);
 
 		// Expose the derived stores, which are readable stores
-		this.characterStates = characterStates;
 		this.gameState = gameState;
+		this.characterStates = characterStates;
+		this.mistakes = mistakes;
+		this.correctedMistakes = correctedMistakes;
 		this.cursorPosition = cursorPosition;
 		this.wpm = wpm;
 		this.cps = cps;
@@ -308,12 +326,12 @@ export class TypingGame {
 				);
 			}
 
-			oldInputText = ''; // Reset this variable so totalTypedCharacters works next time
 			inputDisabled = false; // Re-enable user input
+			mistakePositions = []; // Empty mistake positions
+			correctedMistakePositions = []; // Empty corrected mistake positions
+			oldInputText = ''; // Reset this variable so totalTypedCharacters works next time
 
 			inputText.set(''); // Reset inputText
-			mistakePositions.set([]); // Reset mistakePositions
-			correctedMistakePositions.set([]); // Reset correctedMistakePositions
 			totalTypedCharacters.set(0); // Reset totalTypedCharacters
 			startTime.set(null); // Reset startTime
 			endTime.set(null); // Reset endTime
