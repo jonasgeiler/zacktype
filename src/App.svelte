@@ -99,7 +99,7 @@
 {/if}
 
 <div id="game">
-	<div id="text">
+	<div id="text" title={$gameState !== GameState.Finished ? "Just start typing!" : "Well done!"}>
 		{#each $text as character, index (character + index)}
 			<span class:cursor={$cursorPosition === index && cursorActive}
 			      class:correct={$characterStates[index] === CharacterState.Correct}
@@ -113,12 +113,12 @@
 			<div id="result">
 				<div class="result-item">
 					<span class="result-value">{$cps}</span>
-					<span class="result-description">chars/sec</span>
+					<span class="result-description" title="characters per second">chars/sec</span>
 				</div>
 
 				<div class="result-item">
 					<span class="result-value">{$wpm}</span>
-					<span class="result-description">words/min</span>
+					<span class="result-description" title="words per minute">words/min</span>
 				</div>
 
 				<div class="result-item">
@@ -127,12 +127,12 @@
 				</div>
 
 				<div class="result-item">
-					<span class="result-value">{$mistakes}</span>
+					<span class="result-value" title="{$correctedMistakes} out of {$mistakes} mistakes were corrected">{$mistakes}</span>
 					<span class="result-description">mistakes</span>
 				</div>
 			</div>
 
-			<a on:click={() => typingGame.reset()} id="restart">
+			<a on:click={() => typingGame.reset()} id="restart" title="Click to restart">
 				<svg xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24" height="30" width="30">
 					<path d="M7 9H0V2h1v5.2C2.853 2.963 7.083 0 12 0c6.623 0 12 5.377 12 12s-5.377 12-12 12C5.714 24 .55 19.156.041 13h1.004C1.551 18.603 6.266 23 12 23c6.071 0 11-4.929 11-11S18.071 1 12 1C7.34 1 3.353 3.904 1.751 8H7v1z" />
 				</svg>
