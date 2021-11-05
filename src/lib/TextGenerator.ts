@@ -28,7 +28,7 @@ export class TextGenerator {
 				if (makeUppercase) {
 					word = word.toUpperCase(); // Make the whole word uppercase
 				} else {
-					const makeFirstLetterUppercase = (i == 0) || Utils.withProbability(5); // Always make the first letter uppercase, and add a rather small chance that it is uppercase, no matter the position
+					const makeFirstLetterUppercase = (i == 0) || Utils.withProbability(5); // Always make the first word uppercase, and add a rather small chance that it is uppercase, no matter the position
 
 					if (makeFirstLetterUppercase) {
 						word = word[0].toUpperCase() + word.substr(1); // Make the first letter uppercase
