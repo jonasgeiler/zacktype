@@ -8,7 +8,7 @@ on:
       - main
 
 jobs:
-  text-build-deploy:
+  test-build-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
