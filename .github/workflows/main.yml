@@ -48,6 +48,6 @@ jobs:
         with:
           branch: gh-pages
           folder: dist
-          git-config-name: SkayoBot
-          git-config-email: frederike.gnampf@gmail.com
+          git-config-name: skayobot
+          git-config-email: bot@skayo.dev
           clean: true
