@@ -1,15 +1,18 @@
-name: Test, Build & Deploy
+name: Deploy
+
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+permissions:
+  contents: write
 
 jobs:
   test-build-deploy:
+    name: Test, Build & Deploy
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
@@ -35,17 +38,12 @@ jobs:
         run: pnpm run test
 
       - name: Build 🏗
-        if: ${{ github.event_name == 'push' }}
         run: pnpm run build
 
       - name: CNAME 🧾
-        if: ${{ github.event_name == 'push' }}
         run: echo zacktype.jonasgeiler.com > dist/CNAME
 
       - name: Deploy 🚀
-        if: ${{ github.event_name == 'push' }}
-        uses: JamesIves/github-pages-deploy-action@4.1.5
+        uses: JamesIves/github-pages-deploy-action@4.6.1
         with:
-          branch: gh-pages
           folder: dist
-          clean: true
