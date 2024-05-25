@@ -40,7 +40,7 @@ jobs:
 
       - name: CNAME 🧾
         if: ${{ github.event_name == 'push' }}
-        run: echo zacktype.skayo.dev > dist/CNAME
+        run: echo zacktype.jonasgeiler.com > dist/CNAME
 
       - name: Deploy 🚀
         if: ${{ github.event_name == 'push' }}
@@ -48,6 +48,4 @@ jobs:
         with:
           branch: gh-pages
           folder: dist
-          git-config-name: skayobot
-          git-config-email: bot@skayo.dev
           clean: true

@@ -1,32 +1,9 @@
-[![zacktype](public/social-preview.png)](https://zacktype.skayo.dev)
+[![zacktype](public/social-preview.png)](https://zacktype.jonasgeiler.com)
 
-## Goals of this project
+## About
 
-- Measure typing speed with a simple test
-- Minimalistic front end (no framework)
-- Have most of the game logic in its own class, separate from the front end, so writing unit tests is much simpler (only expose some stores)
+Zacktype is a very minimal typing speed measurement game I have built for a job application in 2021!
+All you have to do is type the text you see on the screen and it will show you your
+words-per-minute, words-per-second, and other stats.
 
-## TODO
-
-- [X] Be able to actually play the game, which means:
-  - [X] Calculate and display CPS
-  - [X] Implemented a "game over" state
-  - [X] Be able to reset the game and play again
-  - [X] Count errors
-  - [X] Handle user input
-  - [X] Handle backspace
-- [X] Design a minimalistic front end
-  - [X] Mockup
-  - [X] Website
-- [X] Calculate and display accuracy
-- [X] Calculate and display WPM
-- [X] More unit tests
-- [X] Make PWA-ready
-- [X] Maybe make a light and dark theme?
-- [ ] Maybe add some settings?
-- [ ] Maybe use quotes instead of random text?
-
-## Mockups
-
-![Start View](assets/StartView.png)
-![Game Over View](assets/GameOverView.png)
+Have fun! 😉
