@@ -47,3 +47,6 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.6.1
         with:
           folder: dist
+          git-config-name: github-actions[bot]
+          git-config-email: 41898282+github-actions[bot]@users.noreply.github.com
+
