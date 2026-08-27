@@ -6,3 +6,7 @@ All you have to do is type the text you see on the screen and it will show you y
 words-per-minute, characters-per-second, accuracy, and other stats.
 
 Have fun! 😉
+
+> [!TIP]
+> #### Try it out over at:
+> ### https://zacktype.jonasgeiler.com
